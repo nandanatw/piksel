@@ -1,0 +1,35 @@
+{
+  "name": "kreasya-app",
+  "version": "1.0.0",
+  "description": "Kreasya AI image generation platform",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "db:migrate": "node scripts/migrate.js",
+    "db:import-json": "node scripts/import-json.js",
+    "signup": "node signup.js"
+  },
+  "dependencies": {
+    "@getbrevo/brevo": "^6.0.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.0.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.6.2",
+    "helmet": "^8.3.0",
+    "imap-simple": "^5.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "mailparser": "^3.9.15",
+    "multer": "^2.2.0",
+    "node-cron": "^4.6.0",
+    "nodemailer": "^9.0.5",
+    "otplib": "^13.4.1",
+    "pg": "^8.23.0",
+    "puppeteer": "^25.7.0",
+    "sharp": "^0.35.3"
+  },
+  "allowScripts": {
+    "puppeteer@25.7.0": true
+  }
+}
