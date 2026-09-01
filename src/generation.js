@@ -250,37 +250,56 @@ async function generateImageRotate(prompt, model, ratio, resolution, refFiles, l
 
     try {
       try {
-        let materialIds = [];
+        let refImageB64 = null;
         if (refFiles && refFiles.length > 0) {
           for (const file of refFiles) {
-            let uploaded = false
+            let uploaded = false;
             for (let attempt = 0; attempt < 3; attempt++) {
               try {
-                const uploadTimeout = Math.max(15000, Math.min(120000, deadlineAt - Date.now()))
-                const out = await runCLI(['upload', file.path, '--json'], { RENOISE_API_KEY: entry.key }, { timeout: uploadTimeout })
-                const data = JSON.parse(out)
-                if (data.material?.id) {
-                  materialIds.push(data.material.id + ':reference_image')
-                  uploaded = true
-                  break
+                const uploadTimeout = Math.max(15000, Math.min(120000, deadlineAt - Date.now()));
+                const out = await runCLI(['upload', file.path, '--json'], { RENOISE_API_KEY: entry.key }, { timeout: uploadTimeout });
+                const data = JSON.parse(out);
+                if (data.image_b64) {
+                  refImageB64 = data.image_b64;
+                  uploaded = true;
+                  break;
                 }
-                if (data.error) throw new Error(JSON.stringify(data.error))
+                if (data.material?.id) {
+                  refImageB64 = data.material.id;
+                  uploaded = true;
+                  break;
+                }
+                if (data.error) throw new Error(JSON.stringify(data.error));
               } catch (uploadErr) {
-                if (attempt === 2) throw uploadErr
-                await new Promise(r => setTimeout(r, 2000))
+                if (attempt === 2) throw uploadErr;
+                await new Promise(r => setTimeout(r, 2000));
               }
             }
-            if (!uploaded) throw new Error('Upload failed after 3 attempts')
+            if (!uploaded) throw new Error('Upload failed after 3 attempts');
+            break;
           }
         }
 
         const args = ['task', 'create', '--model', model, '--type', 'image', '--prompt', prompt, '--ratio', useRatio, '--json'];
         if (useRes) args.push('--resolution', useRes);
-        if (materialIds.length > 0) args.push('--materials', materialIds.join(','));
+        if (refImageB64) args.push('--materials', refImageB64);
         if (localTaskId && pendingTasks.get(localTaskId)?.cancelRequested) throw cancelledError();
 
-        const createOut = await runCLI(args, { RENOISE_API_KEY: entry.key }, { timeout: 30000 }); // 30s timeout for create
+        const createOut = await runCLI(args, { RENOISE_API_KEY: entry.key }, { timeout: 300000 });
         const createData = JSON.parse(createOut);
+
+        if (createData._directResult) {
+          entry.balance = await consumeBalance(entry.key, createData.task.estimatedCredit || estimatedCost);
+          if (entry.balance <= 0) { entry.exhausted = true; entry.exhaustedAt = new Date().toISOString(); }
+          return {
+            url: createData.imageUrl || '',
+            imageUrls: createData.imageUrls || [],
+            taskId: createData.task.id, prompt, model, ratio: useRatio, resolution: useRes,
+            usedKey: 'key_' + entry.id, keyIndex: pool.indexOf(entry) + 1,
+            estimatedCredit: createData.task.estimatedCredit || estimatedCost, remainingBalance: entry.balance,
+          };
+        }
+
         if (createData.error) {
           const msg = JSON.stringify(createData.error);
           if (/credit|balance|insufficient|quota|exhausted|limit/i.test(msg)) {
@@ -292,54 +311,37 @@ async function generateImageRotate(prompt, model, ratio, resolution, refFiles, l
           errors.push('key_' + entry.id + ': ' + msg);
           continue;
         }
+
         const providerTaskId = createData.task.id;
         const actualCost = createData.task.estimatedCredit || estimatedCost;
-        const waitController = new AbortController();
-        if (localTaskId) {
-          providerControls.set(localTaskId, { providerTaskId, apiKey: entry.key, apiKeyId: entry.id, waitController, cancelPromise: null });
-          await query(
-            'UPDATE image_tasks SET provider_task_id=$2,provider_key_id=$3,provider_cancel_error=NULL WHERE task_id=$1',
-            [localTaskId, String(providerTaskId), entry.id]
-          );
-          if (pendingTasks.get(localTaskId)?.cancelRequested) {
-            const cancellation = await cancelProviderTask(localTaskId);
-            if (cancellation.cancelled) {
-              providerControls.delete(localTaskId);
-              throw cancelledError();
+
+        // Poll for result
+        const pollDeadline = Date.now() + 300000;
+        while (Date.now() < pollDeadline) {
+          if (localTaskId && pendingTasks.get(localTaskId)?.cancelRequested) throw cancelledError();
+          try {
+            const resultOut = await runCLI(['task', 'result', String(providerTaskId), '--json'], { RENOISE_API_KEY: entry.key }, { timeout: 30000 });
+            const resultData = JSON.parse(resultOut);
+            if (resultData.status === 'done' || resultData.imageUrl) {
+              entry.balance = await consumeBalance(entry.key, actualCost);
+              if (entry.balance <= 0) { entry.exhausted = true; entry.exhaustedAt = new Date().toISOString(); }
+              return {
+                url: resultData.imageUrl || '',
+                imageUrls: resultData.imageUrls || [],
+                taskId: providerTaskId, prompt, model, ratio: useRatio, resolution: useRes,
+                usedKey: 'key_' + entry.id, keyIndex: pool.indexOf(entry) + 1,
+                estimatedCredit: actualCost, remainingBalance: entry.balance,
+              };
             }
+            if (resultData.status === 'failed' || resultData.status === 'cancelled') {
+              throw new Error(resultData.error || 'Task failed');
+            }
+          } catch (pollErr) {
+            if (pollErr.message === 'Task failed') throw pollErr;
           }
+          await new Promise(r => setTimeout(r, 2000));
         }
-        
-        // Use Modal HTTP endpoint polling with configurable timeout
-        try {
-          const waitTimeout = Math.max(1000, Math.min(360000, deadlineAt - Date.now()));
-          await runCLI(
-            ['task', 'wait', String(providerTaskId), '--timeout', '5m', '--json'], 
-            { RENOISE_API_KEY: entry.key },
-            { timeout: waitTimeout, signal: waitController.signal }
-          );
-          if (localTaskId && pendingTasks.get(localTaskId)?.cancelRequested) throw cancelledError();
-          
-          const resultOut = await runCLI(['task', 'result', String(providerTaskId), '--json'], { RENOISE_API_KEY: entry.key }, { timeout: 30000 });
-          const resultData = JSON.parse(resultOut);
-          entry.balance = await consumeBalance(entry.key, actualCost);
-          if (entry.balance <= 0) { entry.exhausted = true; entry.exhaustedAt = new Date().toISOString(); }
-          return {
-            url: resultData.imageUrl || '',
-            imageUrls: resultData.imageUrls || [],
-            taskId: providerTaskId, prompt, model, ratio: useRatio, resolution: useRes,
-            usedKey: 'key_' + entry.id, keyIndex: pool.indexOf(entry) + 1,
-            estimatedCredit: actualCost, remainingBalance: entry.balance,
-          };
-        } catch (waitErr) {
-          if (localTaskId && pendingTasks.get(localTaskId)?.cancelRequested) throw cancelledError();
-          if (Date.now() >= deadlineAt) throw new Error('Generation timed out after 12 minutes');
-          errors.push('key_' + entry.id + ': ' + waitErr.message);
-          continue;
-        } finally {
-          const currentControl = localTaskId ? providerControls.get(localTaskId) : null;
-          if (currentControl?.providerTaskId === providerTaskId) providerControls.delete(localTaskId);
-        }
+        throw new Error('Generation timed out');
       } catch (e) {
         if (e.terminal) throw e;
         const msg = e.message || String(e);

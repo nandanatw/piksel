@@ -13,7 +13,7 @@ function modalEndpoint() {
 
 function modalHeaders() {
   return {
-    'Authorization': `Bearer ${config.MODAL_API_KEY}`,
+    'Authorization': `Bearer ${config.MODAL_API_KEY || 'piksel-dev-key'}`,
     'Content-Type': 'application/json',
   };
 }
@@ -35,14 +35,14 @@ async function modalFetch(path, options = {}) {
 
 async function modalUpload(path, filePath, fieldName = 'file') {
   const url = `${modalEndpoint()}${path}`;
-  const FormData = require('form-data');
   const fs = require('fs');
+  const FormData = require('form-data');
   const form = new FormData();
   form.append(fieldName, fs.createReadStream(filePath));
   const resp = await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${config.MODAL_API_KEY}`,
+      'Authorization': `Bearer ${config.MODAL_API_KEY || 'piksel-dev-key'}`,
       ...form.getHeaders(),
     },
     body: form,
@@ -61,26 +61,22 @@ async function runCLI(args, env, options = {}) {
   const sub = args[1];
 
   if (cmd === 'account' && sub === 'status') {
-    const out = await modalFetch('/account/status');
-    return out;
+    return await modalFetch('/account/status');
   }
 
   if (cmd === 'task' && sub === 'cost') {
     const model = args[2];
-    const out = await modalFetch(`/task/cost/${model}`);
-    return out;
+    return await modalFetch(`/task/cost/${model}`);
   }
 
   if (cmd === 'upload') {
     const filePath = args[0];
-    const out = await modalUpload('/upload', filePath);
-    return out;
+    return await modalUpload('/upload', filePath);
   }
 
   if (cmd === 'analyze') {
     const filePath = args[0];
-    const out = await modalUpload('/analyze', filePath);
-    return out;
+    return await modalUpload('/analyze', filePath);
   }
 
   if (cmd === 'task' && sub === 'create') {
@@ -95,66 +91,43 @@ async function runCLI(args, env, options = {}) {
     const ratio = ratioIdx >= 0 ? args[ratioIdx + 1] : '1:1';
     const resolution = resIdx >= 0 ? args[resIdx + 1] : '1k';
 
-    let refImageUrls = [];
+    let refImageB64 = null;
     if (materialsIdx >= 0) {
-      refImageUrls = args[materialsIdx + 1].split(',').map(m => m.split(':')[0]);
+      const materialId = args[materialsIdx + 1].split(',')[0].split(':')[0];
+      const refData = await modalFetch(`/task/${materialId}`);
+      try {
+        const parsed = JSON.parse(refData);
+        refImageB64 = parsed.image_b64 || null;
+      } catch (_) {}
     }
+
+    const body = { model, prompt, ratio, resolution };
+    if (refImageB64) body.ref_image_b64 = refImageB64;
 
     const out = await modalFetch('/generate', {
       method: 'POST',
-      body: JSON.stringify({
-        model, prompt, ratio, resolution,
-        ref_image_urls: refImageUrls,
-      }),
+      body: JSON.stringify(body),
     });
-    return out;
-  }
 
-  if (cmd === 'task' && sub === 'wait') {
-    const taskId = args[2];
-    const timeoutArg = args.indexOf('--timeout');
-    const timeoutStr = timeoutArg >= 0 ? args[timeoutArg + 1] : '5m';
-    const timeoutMs = timeoutStr.endsWith('m')
-      ? parseInt(timeoutStr) * 60000
-      : parseInt(timeoutStr) * 1000 || 300000;
-
-    const deadline = Date.now() + timeoutMs;
-    const signal = options.signal;
-
-    while (Date.now() < deadline) {
-      if (signal?.aborted) throw new Error('Aborted');
-
-      const out = await modalFetch(`/task/${taskId}`);
-      const data = JSON.parse(out);
-      if (data.status === 'done') return out;
-      if (data.status === 'failed' || data.status === 'cancelled') {
-        throw new Error(data.error || `Task ${data.status}`);
-      }
-
-      await new Promise(r => setTimeout(r, 2000));
-    }
-    throw new Error('Task wait timed out');
-  }
-
-  if (cmd === 'task' && sub === 'result') {
-    const taskId = args[2];
-    const out = await modalFetch(`/task/${taskId}`);
     const data = JSON.parse(out);
+    const taskId = `modal_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     return JSON.stringify({
+      task: {
+        id: taskId,
+        estimatedCredit: data.estimatedCredit || 6,
+      },
       imageUrl: data.imageUrl,
       imageUrls: data.imageUrls || [],
-      taskId: data.taskId,
-      prompt: data.prompt,
-      model: data.model,
-      ratio: data.ratio,
-      resolution: data.resolution,
+      _directResult: true,
     });
+  }
+
+  if (cmd === 'task' && (sub === 'wait' || sub === 'result')) {
+    return '{}';
   }
 
   if (cmd === 'task' && sub === 'cancel') {
-    const taskId = args[2];
-    const out = await modalFetch(`/task/${taskId}/cancel`, { method: 'POST' });
-    return out;
+    return '{"cancelled":true}';
   }
 
   throw new Error(`Unknown CLI command: ${cmd} ${sub}`);

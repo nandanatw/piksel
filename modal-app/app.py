@@ -1,36 +1,45 @@
 import os
 import io
-import uuid
-import time
-import json
+import random
 import base64
-import threading
 from pathlib import Path
 from typing import Optional
 
 import torch
 from PIL import Image
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 import modal
 
 app = modal.App("piksel-image-gen")
 
-web_app = FastAPI(title="Piksel Image Generation")
+CACHE_DIR = "/cache"
+MINUTES = 60
 
-web_app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+image = (
+    modal.Image.debian_slim(python_version="3.11")
+    .uv_pip_install(
+        "accelerate>=1.1",
+        "diffusers>=0.31",
+        "fastapi[standard]>=0.115",
+        "huggingface-hub>=0.36",
+        "pillow>=10.4",
+        "sentencepiece>=0.2",
+        "torch>=2.5",
+        "transformers>=4.46",
+    )
+    .env({
+        "HF_XET_HIGH_PERFORMANCE": "1",
+        "HF_HUB_CACHE": CACHE_DIR,
+    })
 )
 
-API_KEY = os.environ.get("MODAL_API_KEY", "piksel-dev-key")
+with image.imports():
+    import diffusers
 
-tasks: dict = {}
-tasks_lock = threading.Lock()
+cache_volume = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 
 MODEL_RESOLUTIONS = {
     "1:1": (1024, 1024),
@@ -43,10 +52,6 @@ MODEL_RESOLUTIONS = {
     "21:9": (1536, 640),
     "4:5": (896, 1088),
     "5:4": (1088, 896),
-    "1:4": (512, 2048),
-    "4:1": (2048, 512),
-    "1:8": (512, 4096),
-    "8:1": (4096, 512),
 }
 
 RESOLUTION_SCALES = {
@@ -61,18 +66,10 @@ MODEL_COSTS = {
     "flux-schnell": 3,
 }
 
-image = (
-    modal.Image.debian_slim(python_version="3.11")
-    .pip_install_from_requirements("requirements.txt")
-    .env({"HF_HUB_ENABLE_HF_TRANSFER": "1"})
-)
-
-
-def verify_auth(request):
-    auth = request.headers.get("Authorization", "")
-    expected = f"Bearer {API_KEY}"
-    if auth != expected:
-        raise HTTPException(status_code=401, detail="Invalid API key")
+MODEL_IDS = {
+    "flux-schnell": "black-forest-labs/FLUX.1-schnell",
+    "flux-dev": "black-forest-labs/FLUX.1-dev",
+}
 
 
 def get_dimensions(ratio: str, resolution: str) -> tuple[int, int]:
@@ -85,212 +82,250 @@ def get_dimensions(ratio: str, resolution: str) -> tuple[int, int]:
     return max(w, 256), max(h, 256)
 
 
-class GenerateRequest(BaseModel):
-    model: str = "flux-schnell"
-    prompt: str
-    ratio: str = "1:1"
-    resolution: str = "1k"
-    negative_prompt: str = ""
-    num_inference_steps: int = 4
-    guidance_scale: float = 0.0
-    seed: Optional[int] = None
-    ref_image_urls: list[str] = []
+@app.cls(
+    image=image,
+    gpu="A10G",
+    timeout=10 * MINUTES,
+    volumes={CACHE_DIR: cache_volume},
+    secrets=[modal.Secret.from_name("piksel-modal")],
+    container_idle_timeout=300,
+    allow_concurrent_inputs=5,
+)
+class Model:
+    @modal.enter()
+    def load_pipeline(self):
+        model_id = MODEL_IDS.get("flux-schnell")
+        self.pipe_schnell = diffusers.FluxPipeline.from_pretrained(
+            model_id,
+            torch_dtype=torch.bfloat16,
+        )
+        self.pipe_schnell.to("cuda")
 
+        model_id_dev = MODEL_IDS.get("flux-dev")
+        self.pipe_dev = diffusers.FluxPipeline.from_pretrained(
+            model_id_dev,
+            torch_dtype=torch.bfloat16,
+        )
+        self.pipe_dev.to("cuda")
 
-class AsyncTaskResponse(BaseModel):
-    task_id: str
-    status: str
-    estimated_credit: int
+    def _get_pipe(self, model: str):
+        if model == "flux-dev":
+            return self.pipe_dev
+        return self.pipe_schnell
 
+    @modal.method()
+    def generate(
+        self,
+        prompt: str,
+        model: str = "flux-schnell",
+        ratio: str = "1:1",
+        resolution: str = "1k",
+        negative_prompt: str = "",
+        num_inference_steps: int = 4,
+        guidance_scale: float = 0.0,
+        seed: Optional[int] = None,
+        ref_image_b64: Optional[str] = None,
+    ) -> dict:
+        pipe = self._get_pipe(model)
+        w, h = get_dimensions(ratio, resolution)
 
-class TaskResult(BaseModel):
-    task_id: str
-    status: str
-    image_url: Optional[str] = None
-    image_urls: list[str] = []
-    error: Optional[str] = None
-    prompt: Optional[str] = None
-    model: Optional[str] = None
-    ratio: Optional[str] = None
-    resolution: Optional[str] = None
+        generator = torch.Generator("cuda")
+        if seed is not None:
+            generator.manual_seed(seed)
+        else:
+            generator.manual_seed(random.randint(0, 2**32 - 1))
 
+        ref_image = None
+        if ref_image_b64:
+            try:
+                img_bytes = base64.b64decode(ref_image_b64)
+                ref_image = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+                ref_image = ref_image.resize((w, h))
+            except Exception:
+                pass
 
-@web_app.get("/health")
-async def health():
-    return {"status": "ok", "provider": "modal"}
-
-
-@web_app.post("/generate")
-async def generate(request_data: GenerateRequest, request):
-    verify_auth(request)
-    task_id = f"modal_{uuid.uuid4().hex[:12]}"
-    with tasks_lock:
-        tasks[task_id] = {
-            "status": "queued",
-            "created_at": time.time(),
-            "model": request_data.model,
-            "prompt": request_data.prompt,
-            "ratio": request_data.ratio,
-            "resolution": request_data.resolution,
-            "estimated_credit": MODEL_COSTS.get(request_data.model, 6),
-        }
-    threading.Thread(target=run_generation, args=(task_id, request_data), daemon=True).start()
-    return {
-        "task": {
-            "id": task_id,
-            "estimatedCredit": tasks[task_id]["estimated_credit"],
-        }
-    }
-
-
-@web_app.get("/task/{task_id}")
-async def get_task(task_id: str, request):
-    verify_auth(request)
-    with tasks_lock:
-        task = tasks.get(task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    return {
-        "taskId": task_id,
-        "status": task["status"],
-        "imageUrl": task.get("image_url"),
-        "imageUrls": task.get("image_urls", []),
-        "error": task.get("error"),
-        "prompt": task.get("prompt"),
-        "model": task.get("model"),
-        "ratio": task.get("ratio"),
-        "resolution": task.get("resolution"),
-        "estimatedCredit": task.get("estimated_credit", 6),
-    }
-
-
-@web_app.post("/task/{task_id}/cancel")
-async def cancel_task(task_id: str, request):
-    verify_auth(request)
-    with tasks_lock:
-        task = tasks.get(task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    if task["status"] in ("done", "failed", "cancelled"):
-        return {"cancelled": task["status"] == "cancelled", "error": None}
-    task["status"] = "cancelled"
-    task["cancelled_at"] = time.time()
-    return {"cancelled": True, "error": None}
-
-
-@web_app.post("/upload")
-async def upload_image(file: UploadFile = File(...), request):
-    verify_auth(request)
-    try:
-        contents = await file.read()
-        img = Image.open(io.BytesIO(contents))
-        img = img.convert("RGB")
-        buf = io.BytesIO()
-        img.save(buf, format="PNG")
-        material_id = f"mat_{uuid.uuid4().hex[:12]}"
-        with tasks_lock:
-            tasks[material_id] = {
-                "status": "uploaded",
-                "image_data": base64.b64encode(buf.getvalue()).decode(),
-                "created_at": time.time(),
-            }
-        return {"material": {"id": material_id}, "downloadUrl": f"/download/{material_id}"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@web_app.get("/account/status")
-async def account_status(request):
-    verify_auth(request)
-    return {"credit": {"balance": 99999}, "status": "active"}
-
-
-@web_app.get("/task/cost/{model}")
-async def task_cost(model: str):
-    return {"estimatedCredit": MODEL_COSTS.get(model, 6)}
-
-
-@web_app.post("/analyze")
-async def analyze_image(file: UploadFile = File(...), request):
-    verify_auth(request)
-    return {"prompt": "image analysis not available on modal", "tags": []}
-
-
-def run_generation(task_id: str, req: GenerateRequest):
-    try:
-        with tasks_lock:
-            tasks[task_id]["status"] = "running"
-            tasks[task_id]["started_at"] = time.time()
-
-        pipe = load_pipeline(req.model)
-        w, h = get_dimensions(req.ratio, req.resolution)
-        generator = torch.Generator("cpu")
-        if req.seed is not None:
-            generator.manual_seed(req.seed)
-
-        result = pipe(
-            prompt=req.prompt,
-            negative_prompt=req.negative_prompt or None,
+        kwargs = dict(
+            prompt=prompt,
             width=w,
             height=h,
-            num_inference_steps=req.num_inference_steps,
-            guidance_scale=req.guidance_scale,
+            num_inference_steps=num_inference_steps,
+            guidance_scale=guidance_scale,
             generator=generator,
         )
+        if negative_prompt:
+            kwargs["negative_prompt"] = negative_prompt
+        if ref_image:
+            kwargs["image"] = ref_image
+
+        result = pipe(**kwargs)
         img = result.images[0]
+
         buf = io.BytesIO()
         img.save(buf, format="PNG")
         img_b64 = base64.b64encode(buf.getvalue()).decode()
-        image_url = f"data:image/png;base64,{img_b64}"
 
-        with tasks_lock:
-            tasks[task_id]["status"] = "done"
-            tasks[task_id]["image_url"] = image_url
-            tasks[task_id]["image_urls"] = [image_url]
-            tasks[task_id]["finished_at"] = time.time()
-    except Exception as e:
-        with tasks_lock:
-            tasks[task_id]["status"] = "failed"
-            tasks[task_id]["error"] = str(e)[:500]
-            tasks[task_id]["finished_at"] = time.time()
+        torch.cuda.empty_cache()
 
+        return {
+            "imageUrl": f"data:image/png;base64,{img_b64}",
+            "imageUrls": [f"data:image/png;base64,{img_b64}"],
+            "model": model,
+            "prompt": prompt,
+            "ratio": ratio,
+            "resolution": resolution,
+            "estimatedCredit": MODEL_COSTS.get(model, 6),
+        }
 
-_pipe_cache = {}
-_pipe_lock = threading.Lock()
+    @modal.fastapi_endpoint(method="POST")
+    def generate_web(
+        self,
+        prompt: str,
+        model: str = "flux-schnell",
+        ratio: str = "1:1",
+        resolution: str = "1k",
+        negative_prompt: str = "",
+        num_inference_steps: int = 4,
+        guidance_scale: float = 0.0,
+        seed: Optional[int] = None,
+        ref_image_b64: Optional[str] = None,
+    ):
+        return self.generate.local(
+            prompt=prompt,
+            model=model,
+            ratio=ratio,
+            resolution=resolution,
+            negative_prompt=negative_prompt,
+            num_inference_steps=num_inference_steps,
+            guidance_scale=guidance_scale,
+            seed=seed,
+            ref_image_b64=ref_image_b64,
+        )
 
+    @modal.fastapi_endpoint(method="POST", path="/generate")
+    async def generate_json(self, request: Request):
+        body = await request.json()
+        return self.generate.local(
+            prompt=body.get("prompt", ""),
+            model=body.get("model", "flux-schnell"),
+            ratio=body.get("ratio", "1:1"),
+            resolution=body.get("resolution", "1k"),
+            negative_prompt=body.get("negative_prompt", ""),
+            num_inference_steps=body.get("num_inference_steps", 4),
+            guidance_scale=body.get("guidance_scale", 0.0),
+            seed=body.get("seed"),
+            ref_image_b64=body.get("ref_image_b64"),
+        )
 
-def load_pipeline(model_name: str):
-    with _pipe_lock:
-        if model_name in _pipe_cache:
-            return _pipe_cache[model_name]
+    @modal.fastapi_endpoint(method="GET", path="/health")
+    def health(self):
+        return {"status": "ok", "provider": "modal"}
 
-    from diffusers import FluxPipeline
+    @modal.fastapi_endpoint(method="GET", path="/account/status")
+    def account_status(self):
+        return {"credit": {"balance": 99999}, "status": "active"}
 
-    if model_name == "flux-schnell":
-        model_id = "black-forest-labs/FLUX.1-schnell"
-    elif model_name == "flux-dev":
-        model_id = "black-forest-labs/FLUX.1-dev"
-    else:
-        model_id = "black-forest-labs/FLUX.1-schnell"
+    @modal.fastapi_endpoint(method="GET", path="/task/cost/{model}")
+    def task_cost(self, model: str):
+        return {"estimatedCredit": MODEL_COSTS.get(model, 6)}
 
-    pipe = FluxPipeline.from_pretrained(
-        model_id,
-        torch_dtype=torch.bfloat16,
-    )
-    pipe.to("cuda")
-    pipe.enable_model_cpu_offload()
+    @modal.fastapi_endpoint(method="POST", path="/upload")
+    async def upload_image(self, file: UploadFile = File(...)):
+        contents = await file.read()
+        img_b64 = base64.b64encode(contents).decode()
+        return {"material": {"id": f"mat_{img_b64[:12]}"}, "downloadUrl": "", "image_b64": img_b64}
 
-    with _pipe_lock:
-        _pipe_cache[model_name] = pipe
-    return pipe
+    @modal.fastapi_endpoint(method="POST", path="/analyze")
+    async def analyze_image(self, file: UploadFile = File(...)):
+        return {"prompt": "", "tags": []}
+
+    @modal.fastapi_endpoint(method="GET", path="/task/{task_id}")
+    def get_task(self, task_id: str):
+        return {"taskId": task_id, "status": "done", "imageUrl": "", "imageUrls": []}
+
+    @modal.fastapi_endpoint(method="POST", path="/task/{task_id}/cancel")
+    def cancel_task(self, task_id: str):
+        return {"cancelled": True, "error": None}
 
 
 @app.function(
     image=image,
-    gpu="A10G",
-    container_idle_timeout=300,
-    allow_concurrent_inputs=10,
+    secrets=[modal.Secret.from_name("piksel-modal")],
 )
+@modal.concurrent(max_inputs=100)
 @modal.asgi_app()
 def fastapi_app():
-    return web_app
+    fastapi_app = FastAPI(title="Piksel Image Generation")
+    fastapi_app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    auth_scheme = HTTPBearer(auto_error=False)
+
+    def verify_auth(token: Optional[HTTPAuthorizationCredentials] = Depends(auth_scheme)):
+        api_key = os.environ.get("MODAL_API_KEY", "piksel-dev-key")
+        if token and token.credentials == api_key:
+            return True
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
+    model = Model()
+
+    class GenerateBody(BaseModel):
+        model: str = "flux-schnell"
+        prompt: str = ""
+        ratio: str = "1:1"
+        resolution: str = "1k"
+        negative_prompt: str = ""
+        num_inference_steps: int = 4
+        guidance_scale: float = 0.0
+        seed: Optional[int] = None
+        ref_image_b64: Optional[str] = None
+
+    @fastapi_app.get("/health")
+    async def health():
+        return {"status": "ok", "provider": "modal"}
+
+    @fastapi_app.post("/generate")
+    async def generate(body: GenerateBody, _=Depends(verify_auth)):
+        return model.generate.remote(
+            prompt=body.prompt,
+            model=body.model,
+            ratio=body.ratio,
+            resolution=body.resolution,
+            negative_prompt=body.negative_prompt,
+            num_inference_steps=body.num_inference_steps,
+            guidance_scale=body.guidance_scale,
+            seed=body.seed,
+            ref_image_b64=body.ref_image_b64,
+        )
+
+    @fastapi_app.get("/account/status")
+    async def account_status(_=Depends(verify_auth)):
+        return {"credit": {"balance": 99999}, "status": "active"}
+
+    @fastapi_app.get("/task/cost/{model}")
+    async def task_cost(model: str):
+        return {"estimatedCredit": MODEL_COSTS.get(model, 6)}
+
+    @fastapi_app.post("/upload")
+    async def upload_image(file: UploadFile = File(...), _=Depends(verify_auth)):
+        contents = await file.read()
+        img_b64 = base64.b64encode(contents).decode()
+        return {"material": {"id": f"mat_{img_b64[:12]}"}, "downloadUrl": "", "image_b64": img_b64}
+
+    @fastapi_app.post("/analyze")
+    async def analyze_image(file: UploadFile = File(...), _=Depends(verify_auth)):
+        return {"prompt": "", "tags": []}
+
+    @fastapi_app.get("/task/{task_id}")
+    async def get_task(task_id: str, _=Depends(verify_auth)):
+        return {"taskId": task_id, "status": "done", "imageUrl": "", "imageUrls": []}
+
+    @fastapi_app.post("/task/{task_id}/cancel")
+    async def cancel_task(task_id: str, _=Depends(verify_auth)):
+        return {"cancelled": True, "error": None}
+
+    return fastapi_app
