@@ -2501,7 +2501,7 @@ app.post('/api/image/generate', auth.authMiddleware, generationLimiter, upload.a
   const remixParentTaskId = String(req.body.remixParentTaskId || '').trim().slice(0, 200);
   const email = req.user.email;
   const uploadedFiles = req.files || [];
-  const selectedModel = model || 'seedream-5-0-pro';
+  const selectedModel = model || 'flux-schnell';
   if (uploadedFiles.length > 0 && !REFERENCE_IMAGE_MODELS.has(selectedModel)) {
     for (const file of uploadedFiles) { try { fs.unlinkSync(file.path); } catch (_) {} }
     return res.status(400).json({ error: 'Reference images are not available for this model. Remove the image or choose Seedream/Nano Banana.' });
@@ -2530,12 +2530,12 @@ app.post('/api/image/generate', auth.authMiddleware, generationLimiter, upload.a
     }
   }
 
-  const modelInfo = IMAGE_MODELS[model || 'seedream-5-0-pro'] || IMAGE_MODELS['seedream-5-0-pro'];
+  const modelInfo = IMAGE_MODELS[model || 'flux-schnell'] || IMAGE_MODELS['flux-schnell'];
   if (refFiles.length > 0 && modelInfo.supportsImageInput === false) {
     for (const file of refFiles) { try { fs.unlinkSync(file.path); } catch (_) {} }
     return res.status(400).json({ error: `${modelInfo.name} does not support reference images. Choose another model or remove the reference image.` });
   }
-  const cost = generation.getModelCost(model || 'seedream-5-0-pro');
+  const cost = generation.getModelCost(model || 'flux-schnell');
   const totalCost = cost * count;
 
   const user = await credits.getUser(email);
@@ -2560,7 +2560,7 @@ app.post('/api/image/generate', auth.authMiddleware, generationLimiter, upload.a
   const batchId = 'batch_' + Date.now() + '_' + crypto.randomBytes(5).toString('hex');
 
   for (let i = 0; i < count; i++) {
-    if (!user.unlimited && !await credits.deductCredits(email, cost, model || 'seedream-5-0-pro')) break;
+    if (!user.unlimited && !await credits.deductCredits(email, cost, model || 'flux-schnell')) break;
     const taskId = 'task_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6) + '_' + i;
     // Each concurrent task needs its own temporary reference files because processing deletes them after upload.
     const taskRefs = refFiles.map((file, index) => {
@@ -2571,7 +2571,7 @@ app.post('/api/image/generate', auth.authMiddleware, generationLimiter, upload.a
     generation.pendingTasks.set(taskId, { taskId, batchId, batchPosition: i, status: 'queued', prompt: finalPrompt, model, ratio, resolution, email, cost, freeWatermarked: config.FREE_WATERMARK_ENABLED && Boolean(user.freeTrial), createdAt: new Date().toISOString() });
     await generation.saveTask(taskId, generation.pendingTasks.get(taskId));
     if (remixParentTaskId) await db.query('UPDATE image_tasks SET remix_parent_task_id=$2 WHERE task_id=$1', [taskId, remixParentTaskId]);
-    if (!generation.enqueueGeneration({ taskId, batchId, prompt: finalPrompt, model: model || 'seedream-5-0-pro', ratio, resolution, refFiles: taskRefs, email })) {
+    if (!generation.enqueueGeneration({ taskId, batchId, prompt: finalPrompt, model: model || 'flux-schnell', ratio, resolution, refFiles: taskRefs, email })) {
       await generation.cancelTask(taskId, 'queue');
       for (const file of taskRefs) { try { fs.unlinkSync(file.path); } catch (_) {} }
       break;
@@ -2584,8 +2584,8 @@ app.post('/api/image/generate', auth.authMiddleware, generationLimiter, upload.a
   }
 
   const acceptedCost = cost * taskIds.length;
-  await userActivity.logActivity(email, 'generation.create', req, { model: model || 'seedream-5-0-pro', count: taskIds.length, cost: acceptedCost, taskIds });
-  db.query('INSERT INTO prompt_history(email, prompt, model, task_id) VALUES($1,$2,$3,$4)', [email, finalPrompt, model || 'seedream-5-0-pro', taskIds[0]]).catch(() => {});
+  await userActivity.logActivity(email, 'generation.create', req, { model: model || 'flux-schnell', count: taskIds.length, cost: acceptedCost, taskIds });
+  db.query('INSERT INTO prompt_history(email, prompt, model, task_id) VALUES($1,$2,$3,$4)', [email, finalPrompt, model || 'flux-schnell', taskIds[0]]).catch(() => {});
   res.json({ batchId, taskIds, cost, totalCost: acceptedCost, remaining: (await credits.getUser(email))?.credits || 0 });
 });
 

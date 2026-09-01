@@ -63,7 +63,8 @@ const config = {
   MAX_SIGNUP_THREADS: Number(process.env.MAX_SIGNUP_THREADS || 2),
   CREDIT_REFRESH_INTERVAL_MS: Number(process.env.CREDIT_REFRESH_INTERVAL_MS || 60000),
 
-  RENOISE_CLI_PATH: process.env.RENOISE_CLI_PATH || path.join(__dirname, '..', 'renoise-cli'),
+  MODAL_ENDPOINT_URL: process.env.MODAL_ENDPOINT_URL || 'https://piksel-image-gen--fastapi-app.modal.run',
+  MODAL_API_KEY: process.env.MODAL_API_KEY || 'piksel-dev-key',
   SESSION_FILE: path.join(__dirname, '..', 'session.json'),
   PUBLIC_DIR: path.join(__dirname, '..', 'public'),
   STORAGE_DIR: process.env.STORAGE_DIR || path.join(__dirname, '..', 'storage'),
@@ -83,32 +84,16 @@ const RANDOM_NAMES = [
 ];
 
 const IMAGE_MODELS = {
-  'seedream-5-0-pro': { name: 'Seedream 5.0 Pro', supportsImageInput: true, resolutions: ['1k','2k'], ratios: ['1:1','4:3','3:4','16:9','9:16','3:2','2:3','21:9'], defaultRatio: '1:1', defaultRes: '1k' },
-  'seedream-5-0-lite': { name: 'Seedream 5.0 Lite', supportsImageInput: true, resolutions: ['2k','3k','4k'], ratios: ['1:1','4:3','3:4','16:9','9:16','3:2','2:3','21:9'], defaultRatio: '1:1', defaultRes: '2k' },
-  'midjourney-v7': { name: 'Midjourney V7', supportsImageInput: false, resolutions: [], ratios: ['1:1','4:3','3:4','16:9','9:16','3:2','2:3'], defaultRatio: '1:1', defaultRes: null },
-  'mj-v8.1': { name: 'Midjourney V8.1', supportsImageInput: false, resolutions: [], ratios: ['1:1','4:3','3:4','16:9','9:16','3:2','2:3'], defaultRatio: '1:1', defaultRes: null },
-  'mj-v8.2': { name: 'Midjourney V8.2', supportsImageInput: false, resolutions: [], ratios: ['1:1','4:3','3:4','16:9','9:16','3:2','2:3'], defaultRatio: '1:1', defaultRes: null },
-  'gpt-image-2': { name: 'GPT Image 2', supportsImageInput: false, resolutions: ['1k','2k','4k'], ratios: ['1:1','3:2','2:3','3:4','4:3','16:9','9:16','21:9'], defaultRatio: '1:1', defaultRes: '1k' },
-  'grok-image': { name: 'Grok Image', supportsImageInput: false, resolutions: ['1k','2k'], ratios: ['1:1','3:4','4:3','9:16','16:9','2:3','3:2'], defaultRatio: '1:1', defaultRes: '1k' },
-  'grok-image-quality': { name: 'Grok Image Quality', supportsImageInput: false, resolutions: ['1k','2k'], ratios: ['1:1','3:4','4:3','9:16','16:9','2:3','3:2'], defaultRatio: '1:1', defaultRes: '1k' },
-  'nano-banana-pro': { name: 'Nano Banana Pro', supportsImageInput: true, resolutions: ['1k','2k','4k'], ratios: ['1:1','2:3','3:2','3:4','4:3','4:5','5:4','9:16','16:9','21:9'], defaultRatio: '1:1', defaultRes: '1k' },
-  'nano-banana-2': { name: 'Nano Banana 2', supportsImageInput: true, resolutions: ['1k','2k','4k'], ratios: ['1:1','2:3','3:2','3:4','4:3','4:5','5:4','9:16','16:9','21:9','1:4','4:1','1:8','8:1'], defaultRatio: '1:1', defaultRes: '1k' },
+  'flux-dev': { name: 'Flux.1 Dev', supportsImageInput: true, resolutions: ['1k','2k','3k','4k'], ratios: ['1:1','4:3','3:4','16:9','9:16','3:2','2:3','21:9'], defaultRatio: '1:1', defaultRes: '1k' },
+  'flux-schnell': { name: 'Flux.1 Schnell', supportsImageInput: true, resolutions: ['1k','2k','3k','4k'], ratios: ['1:1','4:3','3:4','16:9','9:16','3:2','2:3','21:9'], defaultRatio: '1:1', defaultRes: '1k' },
 };
 
 // Only these providers are currently safe for reference-image uploads.
-const REFERENCE_IMAGE_MODELS = new Set(['seedream-5-0-pro', 'seedream-5-0-lite', 'nano-banana-pro', 'nano-banana-2']);
+const REFERENCE_IMAGE_MODELS = new Set(['flux-dev', 'flux-schnell']);
 
 const FALLBACK_COSTS = {
-  'seedream-5-0-pro': 6,
-  'seedream-5-0-lite': 6,
-  'midjourney-v7': 6,
-  'mj-v8.1': 6,
-  'mj-v8.2': 6,
-  'gpt-image-2': 6,
-  'grok-image': 6,
-  'grok-image-quality': 6,
-  'nano-banana-pro': 6,
-  'nano-banana-2': 6,
+  'flux-dev': 6,
+  'flux-schnell': 3,
 };
 
 module.exports = { config, RANDOM_NAMES, IMAGE_MODELS, FALLBACK_COSTS, REFERENCE_IMAGE_MODELS };

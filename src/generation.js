@@ -232,7 +232,7 @@ async function cancelProviderTask(localTaskId) {
 
 async function generateImageRotate(prompt, model, ratio, resolution, refFiles, localTaskId = null) {
   const pool = await refreshCredits();
-  const modelInfo = IMAGE_MODELS[model] || IMAGE_MODELS['seedream-5-0-pro'];
+  const modelInfo = IMAGE_MODELS[model] || IMAGE_MODELS['flux-schnell'];
   const useRatio = ratio || modelInfo.defaultRatio;
   const useRes = resolution || modelInfo.defaultRes;
   const estimatedCost = getModelCost(model);
@@ -310,7 +310,7 @@ async function generateImageRotate(prompt, model, ratio, resolution, refFiles, l
           }
         }
         
-        // Use renoise-cli native wait with 10 minute timeout (provider default)
+        // Use Modal HTTP endpoint polling with configurable timeout
         try {
           const waitTimeout = Math.max(1000, Math.min(360000, deadlineAt - Date.now()));
           await runCLI(

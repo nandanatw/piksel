@@ -1,4 +1,3 @@
-const { execFile } = require('child_process');
 const { query } = require('./db');
 const { config } = require('./config');
 
@@ -8,21 +7,157 @@ let roundRobinCursor = 0;
 let nextBalanceRefreshAt = 0;
 let balanceRefreshPromise = null;
 
-function runCLI(args, env, options = {}) {
-  const timeout = options.timeout || 600000; // Default 10 minutes, or custom
-  return new Promise((resolve, reject) => {
-    execFile(config.RENOISE_CLI_PATH, args, { env: { ...process.env, ...env }, timeout, signal: options.signal }, (err, stdout, stderr) => {
-      if (err) {
-        let msg = stderr || stdout || err.message;
-        msg = msg.replace(/(--prompt\s+)[\s\S]*?(\s+--)/, '$1***$2');
-        const wrapped = new Error(msg);
-        wrapped.name = err.name || 'Error';
-        wrapped.code = err.code;
-        reject(wrapped);
-      }
-      else resolve(stdout.trim());
-    });
+function modalEndpoint() {
+  return config.MODAL_ENDPOINT_URL || 'https://piksel-image-gen--fastapi-app.modal.run';
+}
+
+function modalHeaders() {
+  return {
+    'Authorization': `Bearer ${config.MODAL_API_KEY}`,
+    'Content-Type': 'application/json',
+  };
+}
+
+async function modalFetch(path, options = {}) {
+  const url = `${modalEndpoint()}${path}`;
+  const resp = await fetch(url, {
+    ...options,
+    headers: { ...modalHeaders(), ...(options.headers || {}) },
   });
+  const text = await resp.text();
+  if (!resp.ok) {
+    const err = new Error(text || `Modal HTTP ${resp.status}`);
+    err.status = resp.status;
+    throw err;
+  }
+  return text;
+}
+
+async function modalUpload(path, filePath, fieldName = 'file') {
+  const url = `${modalEndpoint()}${path}`;
+  const FormData = require('form-data');
+  const fs = require('fs');
+  const form = new FormData();
+  form.append(fieldName, fs.createReadStream(filePath));
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${config.MODAL_API_KEY}`,
+      ...form.getHeaders(),
+    },
+    body: form,
+  });
+  const text = await resp.text();
+  if (!resp.ok) {
+    const err = new Error(text || `Modal HTTP ${resp.status}`);
+    err.status = resp.status;
+    throw err;
+  }
+  return text;
+}
+
+async function runCLI(args, env, options = {}) {
+  const cmd = args[0];
+  const sub = args[1];
+
+  if (cmd === 'account' && sub === 'status') {
+    const out = await modalFetch('/account/status');
+    return out;
+  }
+
+  if (cmd === 'task' && sub === 'cost') {
+    const model = args[2];
+    const out = await modalFetch(`/task/cost/${model}`);
+    return out;
+  }
+
+  if (cmd === 'upload') {
+    const filePath = args[0];
+    const out = await modalUpload('/upload', filePath);
+    return out;
+  }
+
+  if (cmd === 'analyze') {
+    const filePath = args[0];
+    const out = await modalUpload('/analyze', filePath);
+    return out;
+  }
+
+  if (cmd === 'task' && sub === 'create') {
+    const modelIdx = args.indexOf('--model');
+    const promptIdx = args.indexOf('--prompt');
+    const ratioIdx = args.indexOf('--ratio');
+    const resIdx = args.indexOf('--resolution');
+    const materialsIdx = args.indexOf('--materials');
+
+    const model = modelIdx >= 0 ? args[modelIdx + 1] : 'flux-schnell';
+    const prompt = promptIdx >= 0 ? args[promptIdx + 1] : '';
+    const ratio = ratioIdx >= 0 ? args[ratioIdx + 1] : '1:1';
+    const resolution = resIdx >= 0 ? args[resIdx + 1] : '1k';
+
+    let refImageUrls = [];
+    if (materialsIdx >= 0) {
+      refImageUrls = args[materialsIdx + 1].split(',').map(m => m.split(':')[0]);
+    }
+
+    const out = await modalFetch('/generate', {
+      method: 'POST',
+      body: JSON.stringify({
+        model, prompt, ratio, resolution,
+        ref_image_urls: refImageUrls,
+      }),
+    });
+    return out;
+  }
+
+  if (cmd === 'task' && sub === 'wait') {
+    const taskId = args[2];
+    const timeoutArg = args.indexOf('--timeout');
+    const timeoutStr = timeoutArg >= 0 ? args[timeoutArg + 1] : '5m';
+    const timeoutMs = timeoutStr.endsWith('m')
+      ? parseInt(timeoutStr) * 60000
+      : parseInt(timeoutStr) * 1000 || 300000;
+
+    const deadline = Date.now() + timeoutMs;
+    const signal = options.signal;
+
+    while (Date.now() < deadline) {
+      if (signal?.aborted) throw new Error('Aborted');
+
+      const out = await modalFetch(`/task/${taskId}`);
+      const data = JSON.parse(out);
+      if (data.status === 'done') return out;
+      if (data.status === 'failed' || data.status === 'cancelled') {
+        throw new Error(data.error || `Task ${data.status}`);
+      }
+
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    throw new Error('Task wait timed out');
+  }
+
+  if (cmd === 'task' && sub === 'result') {
+    const taskId = args[2];
+    const out = await modalFetch(`/task/${taskId}`);
+    const data = JSON.parse(out);
+    return JSON.stringify({
+      imageUrl: data.imageUrl,
+      imageUrls: data.imageUrls || [],
+      taskId: data.taskId,
+      prompt: data.prompt,
+      model: data.model,
+      ratio: data.ratio,
+      resolution: data.resolution,
+    });
+  }
+
+  if (cmd === 'task' && sub === 'cancel') {
+    const taskId = args[2];
+    const out = await modalFetch(`/task/${taskId}/cancel`, { method: 'POST' });
+    return out;
+  }
+
+  throw new Error(`Unknown CLI command: ${cmd} ${sub}`);
 }
 
 function mapKey(row) {

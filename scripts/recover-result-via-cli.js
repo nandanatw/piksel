@@ -6,12 +6,10 @@ const { query } = require('../src/db');
 const { config } = require('../src/config');
 
 function runCLI(taskId, apiKey) {
-  return new Promise((resolve, reject) => execFile(
-    config.RENOISE_CLI_PATH,
-    ['task', 'result', String(taskId), '--json'],
-    { env: { ...process.env, RENOISE_API_KEY: apiKey }, timeout: 120000 },
-    (error, stdout, stderr) => error ? reject(new Error(stderr || stdout || error.message)) : resolve(stdout)
-  ));
+  const endpoint = config.MODAL_ENDPOINT_URL || 'https://piksel-image-gen--fastapi-app.modal.run';
+  return fetch(`${endpoint}/task/${taskId}`, {
+    headers: { 'Authorization': `Bearer ${apiKey}` },
+  }).then(resp => resp.text());
 }
 
 function findUrl(payload) {

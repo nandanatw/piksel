@@ -387,10 +387,8 @@ export default function AdminQueue() {
                   
                   <Select value={modelFilter} onChange={e => setModelFilter(e.target.value)}>
                     <option value="all">All Models</option>
-                    <option value="seedream-5-0-pro">SeeDream Pro</option>
-                    <option value="seedream-5-0-lite">SeeDream Lite</option>
-                    <option value="midjourney-v7">Midjourney v7</option>
-                    <option value="grok-image">Grok Image</option>
+                    <option value="flux-dev">Flux.1 Dev</option>
+                    <option value="flux-schnell">Flux.1 Schnell</option>
                   </Select>
                   
                   <Input

@@ -1,0 +1,9 @@
+modal>=0.73
+fastapi>=0.115
+diffusers>=0.31
+transformers>=4.46
+accelerate>=1.1
+torch>=2.5
+pillow>=10.4
+sentencepiece>=0.2
+protobuf>=5.28
