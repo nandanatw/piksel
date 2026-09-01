@@ -28,7 +28,7 @@ export default function Help() {
       <header>
         <Badge variant="outline" className="mb-3 border-border text-primary"><HelpCircle className="mr-1.5 h-3.5 w-3.5" />Bantuan</Badge>
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Butuh bantuan?</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Hubungi tim Kreasya melalui WhatsApp untuk pertanyaan, kendala, atau informasi terbaru.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Hubungi tim Piksel melalui WhatsApp untuk pertanyaan, kendala, atau informasi terbaru.</p>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -46,7 +46,7 @@ export default function Help() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Radio className="h-5 w-5 text-primary" />Saluran WhatsApp</CardTitle>
-            <CardDescription>Ikuti kabar, pengumuman, dan pembaruan dari Kreasya.</CardDescription>
+            <CardDescription>Ikuti kabar, pengumuman, dan pembaruan dari Piksel.</CardDescription>
           </CardHeader>
           <CardContent>
             {data.channelUrl ? <Button variant="outline" asChild className="w-full"><a href={data.channelUrl} target="_blank" rel="noreferrer"><Radio className="h-4 w-4" />Buka saluran WhatsApp<ExternalLink className="h-4 w-4" /></a></Button> : <p className="text-sm text-muted-foreground">Saluran belum diatur oleh admin.</p>}

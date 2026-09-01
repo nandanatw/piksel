@@ -176,7 +176,7 @@ export default function Settings() {
     localStorage.setItem("generationNotifications", "true");
     setNotificationsEnabled(true);
     setNotificationMessage("Generation notifications enabled");
-    new Notification("Kreasya", {
+    new Notification("Piksel", {
       body: "Notification aktif. Kami akan memberi tahu saat gambar selesai.",
       icon: "/favicon.svg",
     });
@@ -290,7 +290,7 @@ export default function Settings() {
               Tampilan
             </CardTitle>
             <CardDescription>
-              Sesuaikan tampilan Kreasya di perangkat ini.
+              Sesuaikan tampilan Piksel di perangkat ini.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -349,7 +349,7 @@ export default function Settings() {
               <div>
                 <p className="text-sm font-medium">Notify when finished</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Works while Kreasya is open in this browser.
+                  Works while Piksel is open in this browser.
                 </p>
               </div>
               <Button
@@ -475,7 +475,7 @@ export default function Settings() {
                 </p>
                 <p className="mt-1 max-w-xs text-sm text-muted-foreground">
                   Sign in securely with your Telegram account. You do not need a
-                  separate Kreasya password.
+                  separate Piksel password.
                 </p>
               </div>
             ) : (

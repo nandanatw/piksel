@@ -50,7 +50,7 @@ export default function SharedResult() {
             <Sparkles className="h-5 w-5 text-primary" />
           </span>
           <div>
-            <p className="font-semibold">Kreasya</p>
+            <p className="font-semibold">Piksel</p>
             <p className="text-xs text-muted-foreground">Private image share</p>
           </div>
         </div>
@@ -76,7 +76,7 @@ export default function SharedResult() {
             <CardContent className="p-3 sm:p-5">
               <img
                 src={data.imageUrl}
-                alt="Privately shared Kreasya creation"
+                alt="Privately shared Piksel creation"
                 className="max-h-[72vh] w-full rounded-xl bg-muted object-contain"
               />
               <div className="mt-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">

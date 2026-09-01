@@ -124,7 +124,7 @@ const [showSettings, setShowSettings] = useState(false)
     if (notifiedTaskIdsRef.current.has(taskId) || localStorage.getItem('generationNotifications') !== 'true') return
     if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
     notifiedTaskIdsRef.current.add(taskId)
-    const notice = new Notification('Gambar Kreasya sudah selesai', {
+    const notice = new Notification('Gambar Piksel sudah selesai', {
       body: promptText ? promptText.slice(0, 120) : 'Hasil generate kamu sudah siap dilihat.',
       icon: '/favicon.svg',
       tag: `generation-${taskId}`,
@@ -698,7 +698,7 @@ const [showSettings, setShowSettings] = useState(false)
       setPublishTarget(task)
       setPublishCaption('')
       setPublishTags('')
-      setPublishCreatorName(user?.telegramUsername ? `@${user.telegramUsername.replace(/^@/, '')}` : user?.displayName || 'Kreator Kreasya')
+      setPublishCreatorName(user?.telegramUsername ? `@${user.telegramUsername.replace(/^@/, '')}` : user?.displayName || 'Kreator Piksel')
       setPublishShowPrompt(true)
       setPublishAllowCopy(true)
       setPublishAllowRemix(true)
@@ -767,7 +767,7 @@ const [showSettings, setShowSettings] = useState(false)
         const response = await fetch(task.url, { credentials: 'include' })
         if (response.ok) {
           const blob = await response.blob()
-          nextRefFiles.push(new File([blob], `kreasya-generated-${task.taskId || 'image'}.jpg`, { type: blob.type || 'image/jpeg' }))
+          nextRefFiles.push(new File([blob], `Piksel-generated-${task.taskId || 'image'}.jpg`, { type: blob.type || 'image/jpeg' }))
           nextRefUrls.push(URL.createObjectURL(blob))
         }
       } catch (e) {
@@ -937,7 +937,7 @@ const [showSettings, setShowSettings] = useState(false)
 
   function resultActions(task: ChatTask, index: number) {
     return <>
-      <Button variant="outline" size="icon" asChild aria-label={`Download hasil ${index + 1}`} title="Download" className="h-9 w-9"><a href={task.url} download={`kreasya-${task.taskId}.png`}><Download className="h-4 w-4" /></a></Button>
+      <Button variant="outline" size="icon" asChild aria-label={`Download hasil ${index + 1}`} title="Download" className="h-9 w-9"><a href={task.url} download={`Piksel-${task.taskId}.png`}><Download className="h-4 w-4" /></a></Button>
       <Button variant="outline" size="icon" onClick={() => togglePin(String(task.taskId))} title={pinnedTaskIds.has(String(task.taskId)) ? 'Lepas sematan' : 'Sematkan'} className={cn('h-9 w-9', pinnedTaskIds.has(String(task.taskId)) && 'text-amber-500 border-amber-500/50')}><Pin className={cn('h-4 w-4', pinnedTaskIds.has(String(task.taskId)) && 'fill-current')} /></Button>
       <Button variant={task.isFavorite ? 'default' : 'outline'} size="icon" onClick={() => toggleFavorite(task)} aria-label={task.isFavorite ? 'Remove from favorites' : 'Add to favorites'} title="Favorite" className="h-9 w-9"><Star className={cn('h-4 w-4', task.isFavorite && 'fill-current')} /></Button>
       <Button variant={task.isPublic ? 'default' : 'outline'} size="icon" onClick={() => togglePublish(task)} aria-label={task.isPublic ? 'Make image private' : 'Publish image'} title={task.isPublic ? 'Jadikan privat' : 'Publikasikan'} className="h-9 w-9">{task.isPublic ? <Globe2 className="h-4 w-4" /> : <Lock className="h-4 w-4" />}</Button>
@@ -1081,7 +1081,7 @@ const hasPrompt = !!prompt.trim()
                 </div>
                 <CardTitle className="chat-intro-title text-2xl sm:text-3xl">Ide kamu, siap jadi gambar.</CardTitle>
                 <CardDescription className="max-w-md text-sm leading-6">
-                  Tulis apa yang kamu bayangkan. Kreasya akan membantu mengubahnya menjadi visual yang siap digunakan.
+                  Tulis apa yang kamu bayangkan. Piksel akan membantu mengubahnya menjadi visual yang siap digunakan.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -1441,7 +1441,7 @@ const hasPrompt = !!prompt.trim()
         </DialogHeader>
         <DialogContent className="space-y-4">
           {publishTarget?.thumbnailUrl && <div className="relative min-h-32 overflow-hidden rounded-xl bg-muted"><LoadingImage src={publishTarget.thumbnailUrl} fallbackSrc={publishTarget.url || brokenImg()} alt="Preview post" className="max-h-52 w-full rounded-xl object-contain" /></div>}
-          <div><label className="text-sm font-medium" htmlFor="post-creator">Nama kreator</label><Input id="post-creator" value={publishCreatorName} onChange={e => setPublishCreatorName(e.target.value.slice(0, 50))} placeholder="Kreator Kreasya" className="mt-1.5" /></div>
+          <div><label className="text-sm font-medium" htmlFor="post-creator">Nama kreator</label><Input id="post-creator" value={publishCreatorName} onChange={e => setPublishCreatorName(e.target.value.slice(0, 50))} placeholder="Kreator Piksel" className="mt-1.5" /></div>
           <div><label className="text-sm font-medium" htmlFor="post-caption">Caption <span className="font-normal text-muted-foreground">(opsional)</span></label><Textarea id="post-caption" value={publishCaption} onChange={e => setPublishCaption(e.target.value.slice(0, 500))} placeholder="Ceritakan sedikit tentang karya ini..." className="mt-1.5 min-h-24" /><p className="mt-1 text-right text-xs text-muted-foreground">{publishCaption.length}/500</p></div>
           <div><label className="text-sm font-medium" htmlFor="post-tags">Tags <span className="font-normal text-muted-foreground">(maks. 5)</span></label><Input id="post-tags" value={publishTags} onChange={e => setPublishTags(e.target.value)} placeholder="portrait, indonesia, cinematic" className="mt-1.5" /></div>
           <div className="space-y-2 rounded-xl border border-border bg-muted/25 p-3">

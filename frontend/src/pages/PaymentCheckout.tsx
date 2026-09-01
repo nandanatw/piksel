@@ -44,12 +44,12 @@ export default function PaymentCheckout() {
   const [status, setStatus] = useState<PaymentStatus>({ status: "pending" });
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("kreasya_checkout");
+    const stored = sessionStorage.getItem("Piksel_checkout");
     if (!stored) return;
     try {
       setCheckout(JSON.parse(stored));
     } catch {
-      sessionStorage.removeItem("kreasya_checkout");
+      sessionStorage.removeItem("Piksel_checkout");
     }
   }, []);
 
@@ -96,7 +96,7 @@ export default function PaymentCheckout() {
   }, [checkout?.reference, refresh]);
 
   function closeCheckout() {
-    sessionStorage.removeItem("kreasya_checkout");
+    sessionStorage.removeItem("Piksel_checkout");
     navigate("/payments");
   }
 
@@ -104,13 +104,13 @@ export default function PaymentCheckout() {
     if (!qrDataUrl || !checkout) return;
     const link = document.createElement("a");
     link.href = qrDataUrl;
-    link.download = "kreasya-qris-" + checkout.reference + ".png";
+    link.download = "Piksel-qris-" + checkout.reference + ".png";
     link.click();
   }
 
   if (!checkout) {
     return (
-      <Layout title="Pembayaran" subtitle="Kreasya Image Studio">
+      <Layout title="Pembayaran" subtitle="Piksel Image Studio">
         <div className="mx-auto max-w-xl">
           <Card>
             <CardContent className="p-8 text-center">
@@ -136,7 +136,7 @@ export default function PaymentCheckout() {
   const failed = status.status === "failed" || status.status === "cancelled";
 
   return (
-    <Layout title="Pembayaran" subtitle="Kreasya Image Studio">
+    <Layout title="Pembayaran" subtitle="Piksel Image Studio">
       <div className="mx-auto max-w-4xl">
         <button
           type="button"
@@ -153,7 +153,7 @@ export default function PaymentCheckout() {
                 <Sparkles className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-medium text-primary">Kreasya</p>
+                <p className="text-sm font-medium text-primary">Piksel</p>
                 <h1 className="text-xl font-semibold sm:text-2xl">
                   Selesaikan pembayaran
                 </h1>
@@ -168,7 +168,7 @@ export default function PaymentCheckout() {
               <div className="rounded-2xl bg-white p-3 shadow-lg">
                 <img
                   src={qrDataUrl}
-                  alt="QRIS pembayaran Kreasya"
+                  alt="QRIS pembayaran Piksel"
                   className="h-[260px] w-[260px] sm:h-[290px] sm:w-[290px]"
                 />
               </div>

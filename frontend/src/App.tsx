@@ -31,15 +31,15 @@ import Usage from './pages/Usage'
 import SharedResult from './pages/SharedResult'
 import ResetPassword from './pages/ResetPassword'
 
-const isAdminHost = window.location.hostname === 'admin.kreasya.click'
-const isAppHost = window.location.hostname === 'app.kreasya.click'
+const isAdminHost = window.location.hostname === 'admin.piksel.my.id'
+const isAppHost = window.location.hostname === 'app.piksel.my.id'
 
 function Protected({ children, admin }: { children: React.ReactNode; admin?: boolean }) {
   const { user, loading } = useAuth()
   if (loading) return <div className="flex items-center justify-center min-h-screen"><div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" /></div>
   if (!user) return <Navigate to="/" />
   if (admin && user.role !== 'admin') return <Navigate to="/" />
-  if (!admin && user.role === 'admin') return <Navigate to={isAdminHost ? '/admin/dashboard' : 'https://admin.kreasya.click'} />
+  if (!admin && user.role === 'admin') return <Navigate to={isAdminHost ? '/admin/dashboard' : 'https://admin.piksel.my.id'} />
   return <>{children}</>
 }
 

@@ -64,7 +64,7 @@ export default function Login() {
   useEffect(() => {
     if (user) {
       if (user.role === "admin")
-        window.location.replace("https://admin.kreasya.click");
+        window.location.replace("https://admin.piksel.my.id");
       else nav("/generate", { replace: true });
     }
   }, [user, nav]);
@@ -231,19 +231,19 @@ export default function Login() {
       <section className="relative hidden min-h-screen overflow-hidden bg-[#071014] p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-14">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(54,209,220,.18),transparent_32%),radial-gradient(circle_at_85%_80%,rgba(237,155,105,.14),transparent_28%)]" />
         <a
-          href="https://kreasya.click"
+          href="https://piksel.my.id"
           className="relative z-10 flex w-fit items-center gap-2.5 text-lg font-semibold"
         >
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
             <Sparkles className="h-4 w-4" />
           </span>
-          kreasya<span className="text-primary">.</span>
+          Piksel<span className="text-primary">.</span>
         </a>
         <div className="relative z-10 grid grid-cols-[1.2fr_.8fr] gap-3">
           <div className="relative row-span-2 h-[420px] overflow-hidden rounded-[2rem]">
             <img
               src={portrait}
-              alt="Contoh karya portrait dari Kreasya"
+              alt="Contoh karya portrait dari Piksel"
               className="h-full w-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
@@ -258,12 +258,12 @@ export default function Login() {
           </div>
           <img
             src={travel}
-            alt="Contoh karya travel dari Kreasya"
+            alt="Contoh karya travel dari Piksel"
             className="h-[204px] w-full rounded-[1.5rem] object-cover"
           />
           <img
             src={perfume}
-            alt="Contoh karya produk dari Kreasya"
+            alt="Contoh karya produk dari Piksel"
             className="h-[204px] w-full rounded-[1.5rem] object-cover"
           />
         </div>
@@ -281,11 +281,11 @@ export default function Login() {
       <section className="relative flex min-h-screen items-center justify-center px-4 py-20 sm:px-8">
         <div className="absolute left-4 top-4 sm:left-8 sm:top-7">
           <a
-            href="https://kreasya.click"
+            href="https://piksel.my.id"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            Kembali ke Kreasya
+            Kembali ke Piksel
           </a>
         </div>
         <div className="absolute right-4 top-4 sm:right-8 sm:top-6">
@@ -297,7 +297,7 @@ export default function Login() {
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground">
                 <Sparkles className="h-4 w-4" />
               </span>
-              kreasya<span className="text-primary">.</span>
+              Piksel<span className="text-primary">.</span>
             </div>
           </div>
           <div className="mb-7">

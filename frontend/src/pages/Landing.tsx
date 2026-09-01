@@ -21,7 +21,7 @@ import automotive from "../assets/showcase-automotive.jpg";
 import fantasy from "../assets/showcase-fantasy.jpg";
 import skincare from "../assets/showcase-skincare.jpg";
 
-const appUrl = "https://app.kreasya.click";
+const appUrl = "https://app.piksel.my.id";
 
 const models = [
   { name: "Seedream 5.0 Pro", detail: "Reference images · 1K / 2K" },
@@ -92,7 +92,7 @@ const features = [
     icon: WandSparkles,
     image: portrait,
     title: "Mulai dari satu kalimat",
-    text: "Tulis ide seadanya. Kreasya membantu mengubahnya menjadi visual yang siap dipamerkan.",
+    text: "Tulis ide seadanya. Piksel membantu mengubahnya menjadi visual yang siap dipamerkan.",
   },
   {
     icon: ImageIcon,
@@ -123,7 +123,7 @@ export default function Landing() {
             <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#f0c1a4] via-[#70d9de] to-[#168895] shadow-[0_0_28px_rgba(54,209,220,.24)]">
               <Sparkles className="h-4 w-4 text-[#082126]" />
             </span>
-            kreasya<span className="text-[#67e8f9]">.</span>
+            Piksel<span className="text-[#67e8f9]">.</span>
           </a>
           <div className="landing-muted hidden items-center gap-8 text-sm md:flex">
             <a className="landing-hover transition" href="#results">
@@ -205,7 +205,7 @@ export default function Landing() {
                 href={appUrl}
                 className="landing-primary-button rounded-full px-6 py-3.5 text-sm font-semibold shadow-lg transition hover:-translate-y-0.5"
               >
-                Coba Kreasya gratis{" "}
+                Coba Piksel gratis{" "}
                 <ArrowRight className="ml-1.5 inline h-4 w-4" />
               </a>
               <a
@@ -255,7 +255,7 @@ export default function Landing() {
                     <img
                       key={image}
                       src={image}
-                      alt="Contoh hasil generate Kreasya"
+                      alt="Contoh hasil generate Piksel"
                       style={{ animationDelay: `${index * 7}s` }}
                     />
                   ))}
@@ -281,7 +281,7 @@ export default function Landing() {
                     realistis
                   </p>
                   <div className="mt-3 flex items-center justify-between">
-                    <span className="text-[10px] text-white/35">Kreasya</span>
+                    <span className="text-[10px] text-white/35">Piksel</span>
                     <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] text-white/55">
                       1 gambar
                     </span>
@@ -299,7 +299,7 @@ export default function Landing() {
           <div className="mb-10 flex flex-col gap-5 sm:mb-14 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
               <p className="mb-4 text-xs font-semibold uppercase tracking-[.22em] text-[var(--landing-accent)]">
-                Dibuat dengan Kreasya
+                Dibuat dengan Piksel
               </p>
               <h2 className="text-3xl font-semibold tracking-[-.04em] sm:text-5xl">
                 Satu Composer.
@@ -444,7 +444,7 @@ export default function Landing() {
                 <img
                   key={image}
                   src={image}
-                  alt="Contoh hasil Kreasya"
+                  alt="Contoh hasil Piksel"
                   loading="lazy"
                   className="landing-avatar h-14 w-14 rounded-full border-2 object-cover"
                   style={{ zIndex: 3 - index }}
@@ -481,7 +481,7 @@ export default function Landing() {
         >
           <img
             src={perfume}
-            alt="Contoh visual produk Kreasya"
+            alt="Contoh visual produk Piksel"
             loading="lazy"
             className="absolute inset-0 h-full w-full object-cover object-center opacity-25"
           />
@@ -509,8 +509,8 @@ export default function Landing() {
         </section>
 
         <footer className="landing-border landing-subtle flex flex-col gap-5 border-t py-8 text-xs sm:flex-row sm:items-center sm:justify-between">
-          <span className="landing-muted font-medium">kreasya.</span>
-          <span>© 2026 Kreasya. Made for curious minds.</span>
+          <span className="landing-muted font-medium">Piksel.</span>
+          <span>© 2026 Piksel. Made for curious minds.</span>
           <div className="flex gap-5">
             <a href={appUrl} className="landing-hover">
               Masuk

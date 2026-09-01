@@ -6,7 +6,7 @@ const { ensureTelegramUser, getUser } = require('./credits');
 function telegramConfig(req) {
   const botUsername = String(process.env.TELEGRAM_BOT_USERNAME || '').replace(/^@/, '');
   const clientId = String(process.env.TELEGRAM_CLIENT_ID || '');
-  const redirectUri = String(process.env.TELEGRAM_REDIRECT_URI || `${process.env.BASE_URL || 'https://app.kreasya.click'}/api/auth/telegram/callback`);
+  const redirectUri = String(process.env.TELEGRAM_REDIRECT_URI || `${process.env.BASE_URL || 'https://app.piksel.my.id'}/api/auth/telegram/callback`);
   const oidc = Boolean(clientId && process.env.TELEGRAM_CLIENT_SECRET);
   return { botUsername, clientId, redirectUri, oidc };
 }
@@ -71,7 +71,7 @@ async function handleTelegramCallback(req, res) {
   if (error) return res.redirect(`/?error=${encodeURIComponent(String(error))}`);
   const clientId = String(process.env.TELEGRAM_CLIENT_ID || '');
   const clientSecret = String(process.env.TELEGRAM_CLIENT_SECRET || '');
-  const redirectUri = String(process.env.TELEGRAM_REDIRECT_URI || `${process.env.BASE_URL || 'https://app.kreasya.click'}/api/auth/telegram/callback`);
+  const redirectUri = String(process.env.TELEGRAM_REDIRECT_URI || `${process.env.BASE_URL || 'https://app.piksel.my.id'}/api/auth/telegram/callback`);
   if (!code || !clientId || !clientSecret) return res.redirect('/?error=telegram_config');
   const expectedState = req.cookies?.telegram_oauth_state;
   const verifier = req.cookies?.telegram_oauth_verifier;
@@ -103,7 +103,7 @@ async function handleTelegramCallback(req, res) {
 function startTelegramLogin(req, res) {
   const clientId = String(process.env.TELEGRAM_CLIENT_ID || '');
   const clientSecret = String(process.env.TELEGRAM_CLIENT_SECRET || '');
-  const redirectUri = String(process.env.TELEGRAM_REDIRECT_URI || `${process.env.BASE_URL || 'https://app.kreasya.click'}/api/auth/telegram/callback`);
+  const redirectUri = String(process.env.TELEGRAM_REDIRECT_URI || `${process.env.BASE_URL || 'https://app.piksel.my.id'}/api/auth/telegram/callback`);
   if (!clientId || !clientSecret) return res.status(503).json({ error: 'Telegram OIDC is not configured' });
   const state = crypto.randomBytes(32).toString('base64url');
   const verifier = crypto.randomBytes(48).toString('base64url');
@@ -133,7 +133,7 @@ async function handleTelegramWebhook(req, res) {
   const chatId = message.chat.id;
   const text = message.text || '';
 
-  let reply = 'Welcome to Kreasya Bot!\n\nCommands:\n/balance - Check credits\n/generate <prompt> - Generate image\n/help - Show help';
+  let reply = 'Welcome to Piksel Bot!\n\nCommands:\n/balance - Check credits\n/generate <prompt> - Generate image\n/help - Show help';
 
   if (text === '/start') {
     const tgUser = message.from;
@@ -145,7 +145,7 @@ async function handleTelegramWebhook(req, res) {
     const user = await getUser(`tg${tgUser.id}@telegram.user`);
     reply = `💰 Credits: ${user?.credits || 0} cr\n📊 Total topup: ${user?.totalCredits || 0} cr`;
   } else if (text === '/help') {
-    reply = '🎨 Kreasya Bot\n\n/start - Register\n/balance - Check credits\n/generate <prompt> - Generate image (coming soon)';
+    reply = '🎨 Piksel Bot\n\n/start - Register\n/balance - Check credits\n/generate <prompt> - Generate image (coming soon)';
   }
 
   try {

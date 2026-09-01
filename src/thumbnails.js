@@ -21,7 +21,7 @@ async function applyWatermark(originalPath, text = config.FREE_WATERMARK_TEXT) {
     .split(/\r?\n/)
     .map(line => line.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[char])))
     .filter(Boolean);
-  const lines = safeLines.length ? safeLines : ['Kreasya AI'];
+  const lines = safeLines.length ? safeLines : ['Piksel'];
 
   // Size the primary line to a balanced share of the shorter side: visible and
   // legible without dominating the image. Secondary lines are smaller.

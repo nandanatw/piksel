@@ -1,7 +1,7 @@
 {
-  "name": "kreasya-app",
+  "name": "piksel-app",
   "version": "1.0.0",
-  "description": "Kreasya AI image generation platform",
+  "description": "piksel AI image generation platform",
   "private": true,
   "scripts": {
     "start": "node server.js",

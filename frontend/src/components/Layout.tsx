@@ -17,7 +17,7 @@ interface LayoutProps {
   floatingHeader?: boolean
 }
 
-export function Layout({ children, title = 'Kreasya', subtitle = 'AI Image Studio', headerContent, floatingHeader = false }: LayoutProps) {
+export function Layout({ children, title = 'Piksel', subtitle = 'AI Image Studio', headerContent, floatingHeader = false }: LayoutProps) {
   const { user, logout } = useAuth()
   const location = useLocation()
   const [open, setOpen] = useState(false)
@@ -69,7 +69,7 @@ export function Layout({ children, title = 'Kreasya', subtitle = 'AI Image Studi
     setSessionError('')
     const response = await fetch('/api/auth/logout-all', { method: 'POST', credentials: 'include' })
     if (!response.ok) { setSessionError('Could not sign out other sessions.'); return }
-    sessionStorage.removeItem('kreasya_mode')
+    sessionStorage.removeItem('Piksel_mode')
     window.location.assign('/')
   }
 
@@ -125,7 +125,7 @@ const expiryDate = user?.unlimitedUntil ? new Date(user.unlimitedUntil).toLocale
             <Sparkles className="h-5 w-5 text-foreground" />
           </div>
           {!sidebarCollapsed && <div>
-            <p className="text-sm font-semibold leading-none">Kreasya</p>
+            <p className="text-sm font-semibold leading-none">Piksel</p>
             <p className="mt-1 text-[11px] text-muted-foreground">{subtitle}</p>
           </div>}
         </div>
@@ -150,7 +150,7 @@ const expiryDate = user?.unlimitedUntil ? new Date(user.unlimitedUntil).toLocale
               <Sparkles className="h-5 w-5 text-foreground" />
             </div>
             <div>
-              <p className="text-sm font-semibold">Kreasya</p>
+              <p className="text-sm font-semibold">Piksel</p>
               <p className="mt-1 text-[11px] text-muted-foreground">{subtitle}</p>
             </div>
           </div>
@@ -169,7 +169,7 @@ const expiryDate = user?.unlimitedUntil ? new Date(user.unlimitedUntil).toLocale
               <Menu className="h-5 w-5" />
             </Button>
             <div className={cn('lg:hidden', floatingHeader && 'hidden')}>
-              <p className="text-sm font-semibold leading-none">Kreasya</p>
+              <p className="text-sm font-semibold leading-none">Piksel</p>
               <p className="mt-1 text-[11px] text-muted-foreground">{subtitle}</p>
             </div>
             <div className={cn('hidden lg:block', floatingHeader && 'lg:hidden')}>
@@ -322,7 +322,7 @@ export function AdminLayout({ children, title = 'Admin console', nav }: { childr
             <Sparkles className="h-5 w-5 text-foreground" />
           </div>
           <div>
-            <p className="text-sm font-semibold leading-none">Kreasya</p>
+            <p className="text-sm font-semibold leading-none">Piksel</p>
             <p className="mt-1 text-[11px] text-muted-foreground">{title}</p>
           </div>
         </div>
@@ -345,7 +345,7 @@ export function AdminLayout({ children, title = 'Admin console', nav }: { childr
               <Sparkles className="h-5 w-5 text-foreground" />
             </div>
             <div>
-              <p className="text-sm font-semibold">Kreasya</p>
+              <p className="text-sm font-semibold">Piksel</p>
               <p className="mt-1 text-[11px] text-muted-foreground">{title}</p>
             </div>
           </div>
@@ -368,7 +368,7 @@ export function AdminLayout({ children, title = 'Admin console', nav }: { childr
               <Menu className="h-5 w-5" />
             </Button>
             <div className="lg:hidden">
-              <p className="text-sm font-semibold leading-none">Kreasya</p>
+              <p className="text-sm font-semibold leading-none">Piksel</p>
               <p className="mt-1 text-[11px] text-muted-foreground">{title}</p>
             </div>
             {/* Desktop: Show current page title */}

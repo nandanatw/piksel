@@ -13,7 +13,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { userRef.current = user }, [user])
 
   const refresh = async () => {
-    const isAdmin = window.location.hostname === 'admin.kreasya.click' || pathname === '/admin' || pathname.startsWith('/admin/')
+    const isAdmin = window.location.hostname === 'admin.piksel.my.id' || pathname === '/admin' || pathname.startsWith('/admin/')
     const url = isAdmin ? '/api/auth/admin/me' : '/api/auth/me'
     return fetch(url, { credentials: 'include' })
       .then(async r => {
@@ -39,13 +39,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [pathname])
 
   const logout = () => {
-    const isAdmin = window.location.hostname === 'admin.kreasya.click' || pathname === '/admin' || pathname.startsWith('/admin/')
-    sessionStorage.removeItem('kreasya_mode')
+    const isAdmin = window.location.hostname === 'admin.piksel.my.id' || pathname === '/admin' || pathname.startsWith('/admin/')
+    sessionStorage.removeItem('Piksel_mode')
     fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
       .then(() => { 
         setUser(null); 
         // Redirect based on which page we're on
-        window.location.href = isAdmin ? (window.location.hostname === 'admin.kreasya.click' ? '/' : '/admin') : '/'
+        window.location.href = isAdmin ? (window.location.hostname === 'admin.piksel.my.id' ? '/' : '/admin') : '/'
       })
   }
 

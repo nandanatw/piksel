@@ -200,7 +200,7 @@ app.post('/api/auth/password', authSecurity.enforcePasswordAuthLimit, async (req
     if (result.user.unlimited && result.user.unlimitedUntil) {
       const hoursLeft = (new Date(result.user.unlimitedUntil).getTime() - Date.now()) / 3600000;
       if (hoursLeft > 0 && hoursLeft <= 24) {
-        auth.sendEmail(email, 'Plan Expiring Soon', `Your ${result.user.freeTrial ? 'free trial' : 'unlimited plan'} will expire in ${Math.round(hoursLeft)} hours. Visit https://kreasya.click/payments to extend.`).catch(() => {});
+        auth.sendEmail(email, 'Plan Expiring Soon', `Your ${result.user.freeTrial ? 'free trial' : 'unlimited plan'} will expire in ${Math.round(hoursLeft)} hours. Visit https://piksel.my.id/payments to extend.`).catch(() => {});
       }
     }
     await auth.issueUserSession(req, res, result.user);
@@ -2810,7 +2810,7 @@ app.get('/api/public/results', async (req, res) => {
       resolution: row.result.resolution || '',
       estimatedCredit: row.result.estimatedCredit || 0,
       email: 'anonymous',
-      creatorName: row.creator_name || 'Kreator Kreasya',
+      creatorName: row.creator_name || 'Kreator Piksel',
       timestamp: row.published_at || row.result.timestamp || row.created_at,
       caption: row.caption || '',
       tags: row.tags || [],
@@ -2853,8 +2853,8 @@ app.put('/api/results/:taskId/public', auth.authMiddleware, async (req, res) => 
   await db.query('UPDATE image_results SET result = $2 WHERE task_id = $1', [taskId, JSON.stringify(updatedResult)]);
   if (isPublic) {
     const profile = await credits.getUser(req.user.email);
-    const fallbackCreatorName = profile?.telegramUsername ? `@${String(profile.telegramUsername).replace(/^@/, '').slice(0, 49)}` : String(profile?.displayName || 'Kreator Kreasya').slice(0, 50);
-    const creatorName = requestedCreatorName || fallbackCreatorName || 'Kreator Kreasya';
+    const fallbackCreatorName = profile?.telegramUsername ? `@${String(profile.telegramUsername).replace(/^@/, '').slice(0, 49)}` : String(profile?.displayName || 'Kreator Piksel').slice(0, 50);
+    const creatorName = requestedCreatorName || fallbackCreatorName || 'Kreator Piksel';
     await db.query(`INSERT INTO public_posts(task_id,owner_email,creator_name,caption,tags,show_prompt,allow_prompt_copy,allow_remix,remix_parent_task_id,published_at,updated_at)
       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,now(),now())
       ON CONFLICT(task_id) DO UPDATE SET creator_name=$3,caption=$4,tags=$5,show_prompt=$6,allow_prompt_copy=$7,allow_remix=$8,
@@ -2987,7 +2987,7 @@ app.get('/api/media/shared/:token', async (req, res) => {
   if (!filePath) return res.status(404).end();
   res.set('Cache-Control', 'private, no-store');
   res.set('Referrer-Policy', 'no-referrer');
-  if (wantsDownload) res.set('Content-Disposition', `attachment; filename="kreasya-shared${path.extname(filePath) || '.png'}"`);
+  if (wantsDownload) res.set('Content-Disposition', `attachment; filename="Piksel-shared${path.extname(filePath) || '.png'}"`);
   res.sendFile(path.resolve(filePath));
 });
 
@@ -3548,7 +3548,7 @@ app.post('/api/results/download', auth.authMiddleware, async (req, res) => {
   const { rows } = await db.query("SELECT task_id, result->>'storagePath' AS path FROM image_results WHERE task_id=ANY($1::text[]) AND email=$2 AND deleted_at IS NULL", [taskIds, req.user.email]);
   if (!rows.length) return res.status(404).json({ error: 'No results found' });
   
-  const tmpDir = path.join(os.tmpdir(), 'kreasya-dl-' + Date.now());
+  const tmpDir = path.join(os.tmpdir(), 'Piksel-dl-' + Date.now());
   fs.mkdirSync(tmpDir, { recursive: true });
   const files = [];
   for (const row of rows) {
@@ -3567,7 +3567,7 @@ app.post('/api/results/download', auth.authMiddleware, async (req, res) => {
   
   if (!fs.existsSync(zipPath)) return res.status(500).json({ error: 'Failed to create zip' });
   res.setHeader('Content-Type', 'application/zip');
-  res.setHeader('Content-Disposition', 'attachment; filename="kreasya-images.zip"');
+  res.setHeader('Content-Disposition', 'attachment; filename="Piksel-images.zip"');
   res.sendFile(zipPath, () => { try { fs.unlinkSync(zipPath); } catch (_) {} });
 });
 

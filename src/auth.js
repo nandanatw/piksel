@@ -168,11 +168,11 @@ async function sendMagicLink(email) {
     const Brevo = require('@getbrevo/brevo');
     const client = new Brevo.BrevoClient({ apiKey: brevoKey });
     await client.transactionalEmails.sendTransacEmail({
-      sender: { email: process.env.BREVO_SENDER || 'noreply@kreasya.id' },
+      sender: { email: process.env.BREVO_SENDER || 'noreply@Piksel.id' },
       to: [{ email }],
-      subject: 'Kreasya Gallery - Magic Link',
+      subject: 'Piksel Gallery - Magic Link',
       htmlContent: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#1a1a2e;color:#eee;border-radius:12px">
-        <h2 style="color:#a78bfa">Kreasya Gallery</h2>
+        <h2 style="color:#a78bfa">Piksel Gallery</h2>
         <p>Click the button below to sign in:</p>
         <a href="${link}" style="display:inline-block;padding:12px 24px;background:#7c3aed;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">Sign In</a>
         <p style="color:#666;font-size:12px">Link expires in 15 minutes.</p></div>`,
@@ -185,9 +185,9 @@ async function sendMagicLink(email) {
     });
     await transporter.sendMail({
       from: process.env.GMAIL_USER, to: email,
-      subject: 'Kreasya Gallery - Magic Link',
+      subject: 'Piksel Gallery - Magic Link',
       html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#1a1a2e;color:#eee;border-radius:12px">
-        <h2 style="color:#a78bfa">Kreasya Gallery</h2>
+        <h2 style="color:#a78bfa">Piksel Gallery</h2>
         <p>Click the button below to sign in:</p>
         <a href="${link}" style="display:inline-block;padding:12px 24px;background:#7c3aed;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">Sign In</a>
         <p style="color:#666;font-size:12px">Link expires in 15 minutes.</p></div>`,
@@ -197,12 +197,12 @@ async function sendMagicLink(email) {
 
 async function sendVerificationEmail(email, token) {
   const link = `${config.BASE_URL}/api/auth/verify?token=${encodeURIComponent(token)}`;
-  const subject = 'Verify your Kreasya account';
-  const html = `<div style="font-family:sans-serif"><h2>Kreasya</h2><p>Verify your email to finish registration.</p><a href="${link}">Verify email</a><p>This link expires in 30 minutes.</p></div>`;
+  const subject = 'Verify your Piksel account';
+  const html = `<div style="font-family:sans-serif"><h2>Piksel</h2><p>Verify your email to finish registration.</p><a href="${link}">Verify email</a><p>This link expires in 30 minutes.</p></div>`;
   if (process.env.BREVO_API_KEY) {
     const Brevo = require('@getbrevo/brevo');
     const client = new Brevo.BrevoClient({ apiKey: process.env.BREVO_API_KEY });
-    return client.transactionalEmails.sendTransacEmail({ sender: { email: process.env.BREVO_SENDER || 'noreply@kreasya.id' }, to: [{ email }], subject, htmlContent: html });
+    return client.transactionalEmails.sendTransacEmail({ sender: { email: process.env.BREVO_SENDER || 'noreply@Piksel.id' }, to: [{ email }], subject, htmlContent: html });
   }
   const nodemailer = require('nodemailer');
   const transporter = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD } });
@@ -212,12 +212,12 @@ async function sendVerificationEmail(email, token) {
 async function sendPasswordResetEmail(email, token) {
   const baseUrl = String(process.env.PUBLIC_APP_URL || config.PUBLIC_APP_URL || config.BASE_URL).replace(/\/$/, '');
   const link = `${baseUrl}/reset-password?token=${encodeURIComponent(token)}`;
-  const subject = 'Reset your Kreasya password';
-  const html = `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px"><h2>Kreasya</h2><p>Kami menerima permintaan untuk mengatur ulang kata sandi akunmu.</p><p><a href="${link}" style="display:inline-block;padding:12px 20px;background:#36c9d3;color:#071014;border-radius:10px;text-decoration:none;font-weight:600">Atur ulang kata sandi</a></p><p>Link ini hanya dapat digunakan sekali dan kedaluwarsa dalam 30 menit.</p><p style="color:#666;font-size:12px">Abaikan email ini jika kamu tidak meminta reset password.</p></div>`;
+  const subject = 'Reset your Piksel password';
+  const html = `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px"><h2>Piksel</h2><p>Kami menerima permintaan untuk mengatur ulang kata sandi akunmu.</p><p><a href="${link}" style="display:inline-block;padding:12px 20px;background:#36c9d3;color:#071014;border-radius:10px;text-decoration:none;font-weight:600">Atur ulang kata sandi</a></p><p>Link ini hanya dapat digunakan sekali dan kedaluwarsa dalam 30 menit.</p><p style="color:#666;font-size:12px">Abaikan email ini jika kamu tidak meminta reset password.</p></div>`;
   if (process.env.BREVO_API_KEY) {
     const Brevo = require('@getbrevo/brevo');
     const client = new Brevo.BrevoClient({ apiKey: process.env.BREVO_API_KEY });
-    return client.transactionalEmails.sendTransacEmail({ sender: { email: process.env.BREVO_SENDER || 'noreply@kreasya.id' }, to: [{ email }], subject, htmlContent: html });
+    return client.transactionalEmails.sendTransacEmail({ sender: { email: process.env.BREVO_SENDER || 'noreply@Piksel.id' }, to: [{ email }], subject, htmlContent: html });
   }
   const nodemailer = require('nodemailer');
   const transporter = nodemailer.createTransport({ host: 'smtp.gmail.com', port: 587, secure: false, auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD } });
@@ -243,7 +243,7 @@ module.exports = {
     if (process.env.BREVO_API_KEY) {
       const Brevo = require('@getbrevo/brevo');
       const client = new Brevo.BrevoClient({ apiKey: process.env.BREVO_API_KEY });
-      return client.transactionalEmails.sendTransacEmail({ sender: { email: process.env.BREVO_SENDER || 'noreply@kreasya.id' }, to: [{ email }], subject, htmlContent: `<div style="font-family:sans-serif">${body}</div>` });
+      return client.transactionalEmails.sendTransacEmail({ sender: { email: process.env.BREVO_SENDER || 'noreply@Piksel.id' }, to: [{ email }], subject, htmlContent: `<div style="font-family:sans-serif">${body}</div>` });
     }
     if (!process.env.GMAIL_USER) return;
     const nodemailer = require('nodemailer');

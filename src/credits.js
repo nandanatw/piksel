@@ -108,7 +108,7 @@ async function ensureUser(email, ip) {
     if (count.rows[0].count >= config.MAX_FREE_ACCOUNTS_PER_IP) return null;
     const { rows } = await client.query(
       'INSERT INTO users(email, username, display_name, credits, total_credits, signup_ip, unlimited, unlimited_until, free_trial) VALUES($1,$2,$3,0,0,$4,true,now()+interval\'7 days\',true) RETURNING *',
-      [email, await availableUsername(client, email.split('@')[0], email), email.split('@')[0] || 'Kreator Kreasya', ip]
+      [email, await availableUsername(client, email.split('@')[0], email), email.split('@')[0] || 'Kreator Piksel', ip]
     );
     return mapUser(rows[0]);
   });

@@ -4,7 +4,7 @@ type Theme = 'light' | 'dark'
 
 export function useTheme() {
   const [theme, setThemeState] = useState<Theme>(() => {
-    const stored = localStorage.getItem('kreasya_theme')
+    const stored = localStorage.getItem('Piksel_theme')
     if (stored === 'dark' || stored === 'light') return stored
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
@@ -18,7 +18,7 @@ export function useTheme() {
       root.classList.remove('dark')
       root.classList.add('light')
     }
-    localStorage.setItem('kreasya_theme', theme)
+    localStorage.setItem('Piksel_theme', theme)
   }, [theme])
 
   const toggle = useCallback(() => {

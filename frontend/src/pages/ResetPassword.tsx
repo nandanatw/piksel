@@ -21,9 +21,9 @@ export default function ResetPassword() {
   const loginHref =
     hostname === "localhost" || hostname === "127.0.0.1"
       ? "/login"
-      : hostname === "app.kreasya.click"
+      : hostname === "app.piksel.my.id"
         ? "/"
-        : "https://app.kreasya.click";
+        : "https://app.piksel.my.id";
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -68,9 +68,9 @@ export default function ResetPassword() {
     <main className="relative flex min-h-screen items-center justify-center bg-background px-4 py-20">
       <div className="absolute right-4 top-4 sm:right-8 sm:top-6"><ThemeToggle /></div>
       <div className="w-full max-w-md">
-        <a href="https://kreasya.click" className="mb-7 flex w-fit items-center gap-2.5 text-lg font-semibold">
+        <a href="https://piksel.my.id" className="mb-7 flex w-fit items-center gap-2.5 text-lg font-semibold">
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground"><Sparkles className="h-4 w-4" /></span>
-          kreasya<span className="text-primary">.</span>
+          Piksel<span className="text-primary">.</span>
         </a>
         <Card className="border-border/80 shadow-xl shadow-black/5">
           <CardHeader>

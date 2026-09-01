@@ -2,7 +2,7 @@ const { Pool } = require('pg');
 const { config } = require('./config');
 
 if (!config.DATABASE_URL) {
-  throw new Error('DATABASE_URL is required. PostgreSQL is the single source of data for Kreasya.');
+  throw new Error('DATABASE_URL is required. PostgreSQL is the single source of data for Piksel.');
 }
 
 const pool = new Pool({

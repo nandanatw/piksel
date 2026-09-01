@@ -23,22 +23,22 @@ export default function TosModal() {
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl">
         <h2 className="text-lg font-semibold text-foreground">Persetujuan Penggunaan Layanan</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Harap baca dan setujui ketentuan berikut sebelum menggunakan Kreasya.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Harap baca dan setujui ketentuan berikut sebelum menggunakan Piksel.</p>
 
         <div className="mt-4 space-y-3 rounded-xl border border-border bg-muted/30 p-4 text-sm text-foreground">
-          <p>Dengan mengakses dan menggunakan Kreasya, Anda menyetujui ketentuan berikut:</p>
+          <p>Dengan mengakses dan menggunakan Piksel, Anda menyetujui ketentuan berikut:</p>
           <ol className="ml-5 list-decimal space-y-2.5">
             <li>
               <strong>Kredit Awal.</strong> Setiap pengguna baru akan menerima kredit awal untuk mencoba layanan image generation. Kredit ini dapat berubah sewaktu-waktu tanpa pemberitahuan terlebih dahulu.
             </li>
             <li>
-              <strong>Konten Buatan Pengguna.</strong> Seluruh konten gambar yang Anda hasilkan melalui platform ini adalah tanggung jawab penuh Anda. Kreasya tidak bertanggung jawab atas konten yang melanggar hak cipta, melanggar hukum, atau menyinggung pihak mana pun.
+              <strong>Konten Buatan Pengguna.</strong> Seluruh konten gambar yang Anda hasilkan melalui platform ini adalah tanggung jawab penuh Anda. Piksel tidak bertanggung jawab atas konten yang melanggar hak cipta, melanggar hukum, atau menyinggung pihak mana pun.
             </li>
             <li>
-              <strong>Pembatasan Tanggung Jawab.</strong> Kreasya tidak bertanggung jawab atas kerugian langsung, tidak langsung, insidental, atau konsekuensial yang timbul dari penggunaan atau ketidakmampuan menggunakan layanan ini.
+              <strong>Pembatasan Tanggung Jawab.</strong> Piksel tidak bertanggung jawab atas kerugian langsung, tidak langsung, insidental, atau konsekuensial yang timbul dari penggunaan atau ketidakmampuan menggunakan layanan ini.
             </li>
             <li>
-              <strong>Hak Penolakan Layanan.</strong> Kreasya berhak menangguhkan atau menghentikan akses akun Anda apabila ditemukan pelanggaran terhadap ketentuan ini.
+              <strong>Hak Penolakan Layanan.</strong> Piksel berhak menangguhkan atau menghentikan akses akun Anda apabila ditemukan pelanggaran terhadap ketentuan ini.
             </li>
           </ol>
         </div>

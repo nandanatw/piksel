@@ -41,7 +41,7 @@ export function CloudflareTurnstile({
       });
     };
     let script = document.querySelector<HTMLScriptElement>(
-      'script[data-kreasya-turnstile="true"]',
+      'script[data-Piksel-turnstile="true"]',
     );
     if (!script) {
       script = document.createElement("script");
@@ -49,7 +49,7 @@ export function CloudflareTurnstile({
         "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
       script.async = true;
       script.defer = true;
-      script.dataset.kreasyaTurnstile = "true";
+      script.dataset.PikselTurnstile = "true";
       document.head.appendChild(script);
     }
     script.addEventListener("load", renderWidget);

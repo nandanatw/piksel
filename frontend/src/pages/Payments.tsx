@@ -234,7 +234,7 @@ export default function Payments() {
     }
     setPaymentNotice(null);
     sessionStorage.setItem(
-      "kreasya_checkout",
+      "Piksel_checkout",
       JSON.stringify({
         qr_string: data.qr_string,
         reference: data.reference,
@@ -315,14 +315,14 @@ export default function Payments() {
     if (!qrDataUrl || !qrPayment) return;
     const link = document.createElement("a");
     link.href = qrDataUrl;
-    link.download = `kreasya-qris-${qrPayment.reference}.png`;
+    link.download = `Piksel-qris-${qrPayment.reference}.png`;
     link.click();
   }
 
   return (
     <Layout
       title="Pembayaran"
-      subtitle="Kreasya Image Studio"
+      subtitle="Piksel Image Studio"
       showCredits
       nav={
         <>
@@ -350,14 +350,14 @@ export default function Payments() {
             </div>
             <div>
               <p className="text-sm font-medium text-primary">
-                Kreasya membership & credits
+                Piksel membership & credits
               </p>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">
                 Siapkan ide berikutnya.
               </h1>
               <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
                 Bayar dengan QRIS dari aplikasi bank atau e-wallet pilihanmu.
-                Aman, cepat, dan langsung tercatat di akun Kreasya.
+                Aman, cepat, dan langsung tercatat di akun Piksel.
               </p>
             </div>
           </div>
@@ -430,7 +430,7 @@ export default function Payments() {
                 <div className="rounded-2xl bg-white p-3 shadow-xl">
                   <img
                     src={qrDataUrl}
-                    alt="QRIS Kreasya untuk pembayaran"
+                    alt="QRIS Piksel untuk pembayaran"
                     className="h-[240px] w-[240px] sm:h-[260px] sm:w-[260px]"
                   />
                 </div>
@@ -463,7 +463,7 @@ export default function Payments() {
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   Bayar langsung dari aplikasi bank atau e-wallet yang mendukung
-                  QRIS. Setelah pembayaran berhasil, halaman Kreasya ini akan
+                  QRIS. Setelah pembayaran berhasil, halaman Piksel ini akan
                   memperbarui status dan akses akun secara otomatis.
                 </p>
                 <div className="mt-5 space-y-3 text-sm">

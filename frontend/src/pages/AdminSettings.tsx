@@ -356,7 +356,7 @@ export default function AdminSettings() {
                     />
                     {name === 'WHATSAPP_DEVELOPER_NUMBER' && <p className="text-[11px] text-muted-foreground">Contoh: 081234567890, +6281234567890, atau 6281234567890. Nomor harus aktif di WhatsApp.</p>}
                     {name === 'WHATSAPP_CHANNEL_URL' && <p className="text-[11px] text-muted-foreground">Masukkan link saluran WhatsApp, misalnya https://whatsapp.com/channel/...</p>}
-                    {name === 'TURNSTILE_SITE_KEY' && <p className="text-[11px] text-muted-foreground">Cloudflare Dashboard → Turnstile → widget untuk domain Kreasya. Boleh ditampilkan di browser.</p>}
+                    {name === 'TURNSTILE_SITE_KEY' && <p className="text-[11px] text-muted-foreground">Cloudflare Dashboard → Turnstile → widget untuk domain Piksel. Boleh ditampilkan di browser.</p>}
                     {name === 'TURNSTILE_SECRET_KEY' && <p className="text-[11px] text-muted-foreground">Secret dienkripsi dan tidak pernah dikirim kembali ke browser.</p>}
                   </div>
                 ))}

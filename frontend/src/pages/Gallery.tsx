@@ -322,7 +322,7 @@ export default function Gallery() {
       setPostCreatorName(
         user?.telegramUsername
           ? `@${user.telegramUsername.replace(/^@/, "")}`
-          : user?.displayName || "Kreator Kreasya",
+          : user?.displayName || "Kreator Piksel",
       );
       setPostShowPrompt(true);
       setPostAllowCopy(true);
@@ -440,7 +440,7 @@ export default function Gallery() {
     const blob = await resp.blob()
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url; a.download = 'kreasya-images.zip'; a.click()
+    a.href = url; a.download = 'Piksel-images.zip'; a.click()
     URL.revokeObjectURL(url)
     setSelected([])
   }
@@ -876,7 +876,7 @@ export default function Gallery() {
                 onChange={(e) =>
                   setPostCreatorName(e.target.value.slice(0, 50))
                 }
-                placeholder="Kreator Kreasya"
+                placeholder="Kreator Piksel"
                 className="mt-1.5"
               />
             </div>

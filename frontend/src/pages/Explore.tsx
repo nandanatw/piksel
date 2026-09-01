@@ -72,7 +72,7 @@ interface PublicResult {
 
 function creatorInitials(name: string) {
   return (
-    (name || "Kreator Kreasya")
+    (name || "Kreator Piksel")
       .replace(/^@/, "")
       .split(/[\s@._-]+/)
       .filter(Boolean)
@@ -307,7 +307,7 @@ export default function Explore() {
     if (navigator.share)
       await navigator
         .share({
-          title: "Kreasya creation",
+          title: "Piksel creation",
           text: item.caption || item.prompt.slice(0, 100),
           url,
         })
@@ -411,7 +411,7 @@ export default function Explore() {
   }
 
   return (
-    <Layout title="Kreasya" subtitle="Community showcase">
+    <Layout title="Piksel" subtitle="Community showcase">
       <header className="relative mb-4 overflow-hidden rounded-3xl border border-border bg-card px-4 py-6 shadow-sm sm:mb-6 sm:px-8 sm:py-8">
         <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-primary/15 blur-3xl" />
         <div className="relative max-w-2xl">
@@ -420,7 +420,7 @@ export default function Explore() {
             className="mb-3 border-border text-primary sm:mb-4"
           >
             <Compass className="mr-1.5 h-3.5 w-3.5" />
-            Komunitas Kreasya
+            Komunitas Piksel
           </Badge>
           <h1 className="text-2xl font-semibold sm:text-3xl lg:text-5xl">
             Temukan. Pelajari. Remix.
@@ -689,7 +689,7 @@ export default function Explore() {
                   )}
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <User className="h-3.5 w-3.5" />
-                    <span>{item.creatorName || "Kreator Kreasya"}</span>
+                    <span>{item.creatorName || "Kreator Piksel"}</span>
                   </div>
                 </CardContent>
               </div>
@@ -741,7 +741,7 @@ export default function Explore() {
         <div className="mx-auto grid max-w-5xl items-start gap-6 xl:grid-cols-[minmax(0,680px)_280px]">
           <section className="min-w-0 space-y-5">
             {visible.map((item) => {
-              const creator = item.creatorName || "Kreator Kreasya";
+              const creator = item.creatorName || "Kreator Piksel";
               const promptExpanded = expandedPromptIds.includes(item.taskId);
               return (
                 <Card
@@ -938,7 +938,7 @@ export default function Explore() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-xs font-semibold">
-                        {item.creatorName || "Kreator Kreasya"}
+                        {item.creatorName || "Kreator Piksel"}
                       </span>
                       <span className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
                         <span className="flex items-center gap-1">
@@ -1024,7 +1024,7 @@ export default function Explore() {
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">
-                  {menuTarget.creatorName || "Kreator Kreasya"}
+                  {menuTarget.creatorName || "Kreator Piksel"}
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
                   {menuTarget.model} · {menuTarget.ratio}
@@ -1088,7 +1088,7 @@ export default function Explore() {
           <div className="flex-shrink-0 border-b bg-card px-4 py-3 flex items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
               <h2 className="text-base font-semibold truncate">{detail.caption || 'Karya komunitas'}</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">{detail.creatorName || 'Kreator Kreasya'} · {detail.model} · {detail.ratio}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{detail.creatorName || 'Kreator Piksel'} · {detail.model} · {detail.ratio}</p>
             </div>
             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg" onClick={() => { setDetail(null); const next = new URLSearchParams(params); next.delete('post'); setParams(next, { replace: true }) }}><X className="h-5 w-5" /></Button>
           </div>
