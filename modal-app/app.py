@@ -41,7 +41,7 @@ cache_volume = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 secret = modal.Secret.from_name("piksel-modal")
 
 MODEL_IDS = {
-    "pony-v6": "AstraliteHeart/Pony-Diffusion-V6-XL",
+    "pony-v6": "LyliaEngine/Pony_Diffusion_V6_XL",
 }
 
 MODEL_COSTS = {"pony-v6": 6}
