@@ -8,6 +8,18 @@ const AuthContext = createContext<{ user: User | null; loading: boolean; refresh
 const LOCAL_DEV = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || new URLSearchParams(window.location.search).has('dev')
 const DEV_USER = { email: 'admin@piksel.my.id', role: 'admin', credits: 100, unlimited: true, freeTrial: false, username: 'admin', displayName: 'Piksel Admin', tosAccepted: true }
 
+// In local dev, intercept all API fetches and inject the dev user header.
+if (LOCAL_DEV && typeof window !== 'undefined') {
+  const originalFetch = window.fetch.bind(window);
+  window.fetch = (input: any, init: any = {}) => {
+    const headers = new Headers(init?.headers || {});
+    if (!headers.has('X-Dev-User') && typeof input === 'string' && input.startsWith('/api/')) {
+      headers.set('X-Dev-User', DEV_USER.email);
+    }
+    return originalFetch(input, { ...init, headers });
+  };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(LOCAL_DEV ? DEV_USER : null)
   const [loading, setLoading] = useState(!LOCAL_DEV)

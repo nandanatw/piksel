@@ -123,7 +123,28 @@ async function resolveTokenUser(token) {
   return user;
 }
 
+// Dev bypass is active unless explicitly disabled with DISABLE_DEV_AUTH=1.
+// This is needed for local development where there is no real session.
+function devBypassActive(req) {
+  if (process.env.DISABLE_DEV_AUTH === '1') return false;
+  if (process.env.DISABLE_DEV_AUTH === '0') return true;
+  // Default: allow bypass on localhost connections only.
+  const remote = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress;
+  return remote === '127.0.0.1' || remote === '::1' || remote === '::ffff:127.0.0.1';
+}
+
 async function authMiddleware(req, res, next) {
+  // Local dev bypass: if request comes from localhost with X-Dev-User header,
+  // auto-authenticate as that user (no cookie/JWT required).
+  if (devBypassActive(req) && req.headers['x-dev-user']) {
+    const { query } = require('./db');
+    const email = String(req.headers['x-dev-user']).toLowerCase();
+    const { rows } = await query('SELECT email, credits, unlimited, username, display_name FROM users WHERE email=$1', [email]);
+    if (rows[0]) {
+      req.user = { email: rows[0].email, credits: rows[0].credits, unlimited: rows[0].unlimited, username: rows[0].username, displayName: rows[0].display_name, role: rows[0].unlimited ? 'admin' : 'user' };
+      return next();
+    }
+  }
   const token = req.cookies?.token || req.headers.authorization?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'Unauthorized' });
   const user = verifyJWT(token);
@@ -132,6 +153,20 @@ async function authMiddleware(req, res, next) {
 }
 
 function adminMiddleware(req, res, next) {
+  // Local dev bypass.
+  if (devBypassActive(req) && req.headers['x-dev-user']) {
+    const { query } = require('./db');
+    const email = String(req.headers['x-dev-user']).toLowerCase();
+    return query('SELECT email, credits, unlimited, username, display_name FROM users WHERE email=$1', [email])
+      .then(({ rows }) => {
+        if (rows[0] && (rows[0].role === 'admin' || rows[0].unlimited)) {
+          req.user = { email: rows[0].email, credits: rows[0].credits, unlimited: rows[0].unlimited, username: rows[0].username, displayName: rows[0].display_name, role: rows[0].role || 'admin' };
+          return next();
+        }
+        return res.status(403).json({ error: 'Admin only' });
+      })
+      .catch(next);
+  }
   const token = req.cookies?.admintoken || req.headers.authorization?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'Unauthorized' });
   const user = verifyJWT(token);
@@ -142,17 +177,27 @@ function adminMiddleware(req, res, next) {
 }
 
 async function anyAuthMiddleware(req, res, next) {
+  // Local dev bypass (same as authMiddleware).
+  if (devBypassActive(req) && req.headers['x-dev-user']) {
+    const { query } = require('./db');
+    const email = String(req.headers['x-dev-user']).toLowerCase();
+    const { rows } = await query('SELECT email, credits, unlimited, username, display_name FROM users WHERE email=$1', [email]);
+    if (rows[0]) {
+      req.user = { email: rows[0].email, credits: rows[0].credits, unlimited: rows[0].unlimited, username: rows[0].username, displayName: rows[0].display_name, role: rows[0].unlimited ? 'admin' : 'user' };
+      return next();
+    }
+  }
   // Check both cookies but prioritize based on role needed
   const userToken = req.cookies?.token;
   const adminToken = req.cookies?.admintoken;
   const headerToken = req.headers.authorization?.replace('Bearer ', '');
-  
+
   const token = headerToken || userToken || adminToken;
   if (!token) return res.status(401).json({ error: 'Unauthorized' });
-  
+
   const user = verifyJWT(token);
   if (!user) return res.status(401).json({ error: 'Invalid token' });
-  
+
   try { await validateUserSession(req, res, user, next); } catch (error) { next(error); }
 }
 
