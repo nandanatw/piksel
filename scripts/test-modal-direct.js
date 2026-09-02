@@ -15,7 +15,16 @@ async function main() {
   console.log('---');
 
   const start = Date.now();
+  let lastLog = start;
+  const heartbeat = setInterval(() => {
+    const elapsed = ((Date.now() - start) / 1000).toFixed(0);
+    process.stdout.write(`\r  waiting... ${elapsed}s elapsed (cold start = download 6.5GB to Volume)`);
+  }, 5000);
+
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25 * 60 * 1000); // 25min
+
     const resp = await fetch(`${endpoint}/generate`, {
       method: 'POST',
       headers: {
@@ -23,7 +32,11 @@ async function main() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ prompt, model, ratio, resolution }),
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
+    clearInterval(heartbeat);
+    process.stdout.write('\n');
 
     if (!resp.ok) {
       const text = await resp.text();
@@ -49,7 +62,14 @@ async function main() {
     console.log(`  Ratio:    ${data.ratio}`);
     console.log(`  Res:      ${data.resolution}`);
   } catch (e) {
-    console.error(`✗ Failed after ${((Date.now() - start) / 1000).toFixed(1)}s:`, e.message);
+    clearInterval(heartbeat);
+    process.stdout.write('\n');
+    if (e.name === 'AbortError') {
+      console.error(`✗ Timed out after ${((Date.now() - start) / 1000).toFixed(1)}s — check Modal dashboard:`);
+      console.error(`  https://modal.com/id/ap-l5i457mSU2CwbEx3Z9SLyy`);
+    } else {
+      console.error(`✗ Failed after ${((Date.now() - start) / 1000).toFixed(1)}s:`, e.message);
+    }
     process.exit(1);
   }
 }

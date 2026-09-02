@@ -207,7 +207,7 @@ def fastapi_app():
         if body.model not in MODEL_IDS:
             raise HTTPException(status_code=400, detail=f"Unknown model {body.model}")
         try:
-            return Model(model_name=body.model).generate.remote(
+            return await Model(model_name=body.model).generate.remote.aio(
                 prompt=body.prompt,
                 negative_prompt=body.negative_prompt,
                 ratio=body.ratio,
