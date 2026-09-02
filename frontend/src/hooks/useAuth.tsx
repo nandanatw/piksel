@@ -5,14 +5,21 @@ interface User { email?: string; role?: string; credits?: number; unlimited?: bo
 
 const AuthContext = createContext<{ user: User | null; loading: boolean; refresh: () => Promise<User | null>; logout: () => void }>({ user: null, loading: true, refresh: async () => null, logout: () => {} })
 
+const LOCAL_DEV = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || new URLSearchParams(window.location.search).has('dev')
+const DEV_USER = { email: 'admin@piksel.my.id', role: 'admin', credits: 100, unlimited: true, freeTrial: false, username: 'admin', displayName: 'Piksel Admin', tosAccepted: true }
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(LOCAL_DEV ? DEV_USER : null)
+  const [loading, setLoading] = useState(!LOCAL_DEV)
   const { pathname } = useLocation()
-  const userRef = useRef<User | null>(null)
+  const userRef = useRef<User | null>(LOCAL_DEV ? DEV_USER : null)
   useEffect(() => { userRef.current = user }, [user])
 
   const refresh = async () => {
+    if (LOCAL_DEV) {
+      setUser(DEV_USER)
+      return DEV_USER
+    }
     const isAdmin = window.location.hostname === 'admin.piksel.my.id' || pathname === '/admin' || pathname.startsWith('/admin/')
     const url = isAdmin ? '/api/auth/admin/me' : '/api/auth/me'
     return fetch(url, { credentials: 'include' })
@@ -33,7 +40,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
       .catch(() => userRef.current)
   }
-
   useEffect(() => {
     refresh().finally(() => setLoading(false))
   }, [pathname])

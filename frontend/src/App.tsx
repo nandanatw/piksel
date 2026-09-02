@@ -33,9 +33,13 @@ import ResetPassword from './pages/ResetPassword'
 
 const isAdminHost = window.location.hostname === 'admin.piksel.my.id'
 const isAppHost = window.location.hostname === 'app.piksel.my.id'
+// Local dev: bypass login. Visit `?dev=1` or open on localhost to skip the
+// login page and land directly on /generate as an unlimited user.
+const LOCAL_DEV = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || new URLSearchParams(window.location.search).has('dev')
 
 function Protected({ children, admin }: { children: React.ReactNode; admin?: boolean }) {
   const { user, loading } = useAuth()
+  if (LOCAL_DEV) return <>{children}</>
   if (loading) return <div className="flex items-center justify-center min-h-screen"><div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" /></div>
   if (!user) return <Navigate to="/" />
   if (admin && user.role !== 'admin') return <Navigate to="/" />
@@ -83,36 +87,71 @@ function App() {
             <Route path="/usage" element={<Protected><Usage /></Protected>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </> : <>
-            <Route path="/" element={<Landing />} />
-            <Route path="/share/:token" element={<SharedResult />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/explore" element={<Explore />} />
-            <Route path="/generate" element={<Protected><Generate /></Protected>} />
-            <Route path="/gallery" element={<Protected><Gallery /></Protected>} />
-            <Route path="/favorites" element={<Protected><Favorites /></Protected>} />
-            <Route path="/payments" element={<Protected><Payments /></Protected>} />
-            <Route path="/payment" element={<Protected><PaymentCheckout /></Protected>} />
-            <Route path="/settings" element={<Protected><Settings /></Protected>} />
-            <Route path="/help" element={<Protected><Help /></Protected>} />
-            <Route path="/references" element={<Protected><References /></Protected>} />
-            <Route path="/usage" element={<Protected><Usage /></Protected>} />
-            <Route path="/admin-login" element={<AdminLogin />} />
-            <Route path="/admin" element={<Protected admin><Navigate to="/admin/dashboard" replace /></Protected>} />
-            <Route path="/admin/dashboard" element={<Protected admin><AdminDashboard /></Protected>} />
-            <Route path="/admin/signup" element={<Protected admin><AdminSignup /></Protected>} />
-            <Route path="/admin/keys" element={<Protected admin><AdminKeys /></Protected>} />
-            <Route path="/admin/users" element={<Protected admin><AdminUsers /></Protected>} />
-            <Route path="/admin/gallery" element={<Protected admin><AdminGallery /></Protected>} />
-            <Route path="/admin/plans" element={<Protected admin><AdminPlans /></Protected>} />
-            <Route path="/admin/vouchers" element={<Protected admin><AdminVouchers /></Protected>} />
-            <Route path="/admin/references" element={<Protected admin><AdminReferences /></Protected>} />
-            <Route path="/admin/settings" element={<Protected admin><AdminSettings /></Protected>} />
-            <Route path="/admin/audit" element={<Protected admin><AdminAudit /></Protected>} />
-            <Route path="/admin/queue" element={<Protected admin><AdminQueue /></Protected>} />
-            <Route path="/admin/backups" element={<Protected admin><AdminBackups /></Protected>} />
-            <Route path="/admin/payments" element={<Protected admin><AdminPayments /></Protected>} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {LOCAL_DEV ? (
+              <>
+                <Route path="/" element={<Navigate to="/generate" replace />} />
+                <Route path="/login" element={<Navigate to="/generate" replace />} />
+                <Route path="/admin-login" element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="/share/:token" element={<SharedResult />} />
+                <Route path="/explore" element={<Explore />} />
+                <Route path="/generate" element={<Generate />} />
+                <Route path="/gallery" element={<Gallery />} />
+                <Route path="/favorites" element={<Favorites />} />
+                <Route path="/payments" element={<Payments />} />
+                <Route path="/payment" element={<PaymentCheckout />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/help" element={<Help />} />
+                <Route path="/references" element={<References />} />
+                <Route path="/usage" element={<Usage />} />
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/signup" element={<AdminSignup />} />
+                <Route path="/admin/keys" element={<AdminKeys />} />
+                <Route path="/admin/users" element={<AdminUsers />} />
+                <Route path="/admin/gallery" element={<AdminGallery />} />
+                <Route path="/admin/plans" element={<AdminPlans />} />
+                <Route path="/admin/vouchers" element={<AdminVouchers />} />
+                <Route path="/admin/references" element={<AdminReferences />} />
+                <Route path="/admin/settings" element={<AdminSettings />} />
+                <Route path="/admin/audit" element={<AdminAudit />} />
+                <Route path="/admin/queue" element={<AdminQueue />} />
+                <Route path="/admin/backups" element={<AdminBackups />} />
+                <Route path="/admin/payments" element={<AdminPayments />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="*" element={<Navigate to="/generate" replace />} />
+              </>
+            ) : <>
+              <Route path="/" element={<Landing />} />
+              <Route path="/share/:token" element={<SharedResult />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/explore" element={<Explore />} />
+              <Route path="/generate" element={<Protected><Generate /></Protected>} />
+              <Route path="/gallery" element={<Protected><Gallery /></Protected>} />
+              <Route path="/favorites" element={<Protected><Favorites /></Protected>} />
+              <Route path="/payments" element={<Protected><Payments /></Protected>} />
+              <Route path="/payment" element={<Protected><PaymentCheckout /></Protected>} />
+              <Route path="/settings" element={<Protected><Settings /></Protected>} />
+              <Route path="/help" element={<Protected><Help /></Protected>} />
+              <Route path="/references" element={<Protected><References /></Protected>} />
+              <Route path="/usage" element={<Protected><Usage /></Protected>} />
+              <Route path="/admin-login" element={<AdminLogin />} />
+              <Route path="/admin" element={<Protected admin><Navigate to="/admin/dashboard" replace /></Protected>} />
+              <Route path="/admin/dashboard" element={<Protected admin><AdminDashboard /></Protected>} />
+              <Route path="/admin/signup" element={<Protected admin><AdminSignup /></Protected>} />
+              <Route path="/admin/keys" element={<Protected admin><AdminKeys /></Protected>} />
+              <Route path="/admin/users" element={<Protected admin><AdminUsers /></Protected>} />
+              <Route path="/admin/gallery" element={<Protected admin><AdminGallery /></Protected>} />
+              <Route path="/admin/plans" element={<Protected admin><AdminPlans /></Protected>} />
+              <Route path="/admin/vouchers" element={<Protected admin><AdminVouchers /></Protected>} />
+              <Route path="/admin/references" element={<Protected admin><AdminReferences /></Protected>} />
+              <Route path="/admin/settings" element={<Protected admin><AdminSettings /></Protected>} />
+              <Route path="/admin/audit" element={<Protected admin><AdminAudit /></Protected>} />
+              <Route path="/admin/queue" element={<Protected admin><AdminQueue /></Protected>} />
+              <Route path="/admin/backups" element={<Protected admin><AdminBackups /></Protected>} />
+              <Route path="/admin/payments" element={<Protected admin><AdminPayments /></Protected>} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </>}
           </>}
         </Routes>
         </ToastProvider>
