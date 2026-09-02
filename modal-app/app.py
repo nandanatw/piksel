@@ -13,12 +13,12 @@ MINUTES = 60
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
+    .apt_install("libgl1", "libglib2.0-0")
     .uv_pip_install(
         "accelerate==1.10.1",
         "diffusers==0.35.1",
         "fastapi[standard]==0.116.1",
         "huggingface-hub[hf-transfer]==0.35.0",
-        "invisible-watermark>=0.2.0",
         "pillow==11.3.0",
         "safetensors==0.6.2",
         "torch==2.8.0",
