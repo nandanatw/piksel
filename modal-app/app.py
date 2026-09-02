@@ -46,7 +46,7 @@ MODEL_IDS = {
 
 MODEL_COSTS = {"pony-v6": 6}
 
-DEFAULT_STEPS = 25
+DEFAULT_STEPS = 20
 DEFAULT_GUIDANCE = 7.0
 
 DEFAULT_NEGATIVE = (
@@ -82,11 +82,13 @@ def get_dimensions(ratio: str, resolution: str) -> tuple[int, int]:
 @app.cls(
     image=image,
     # SDXL + CPU offload fits in 24GB cards. L4 is the cheapest option.
-    gpu=os.environ.get("PIKSEL_GPU", "L4,A10").split(","),
+    gpu=os.environ.get("PIKSEL_GPU", "L4").split(","),
     timeout=30 * MINUTES,
     volumes={CACHE_DIR: cache_volume},
     secrets=[secret],
-    scaledown_window=300,
+    # Keep container warm for 1 hour so back-to-back requests skip the
+    # ~1-2 minute weight load from Volume to VRAM. Idle cost: ~$0.80/h on L4.
+    scaledown_window=3600,
 )
 @modal.concurrent(max_inputs=1)
 class Model:
@@ -207,6 +209,10 @@ def fastapi_app():
     async def generate(body: GenerateBody, _=Depends(verify)):
         if body.model not in MODEL_IDS:
             raise HTTPException(status_code=400, detail=f"Unknown model {body.model}")
+        # Cap steps to prevent runaway inference times. 20 is the sweet spot
+        # for quality vs speed on SDXL; 30 is the practical ceiling.
+        if body.num_inference_steps is not None:
+            body.num_inference_steps = max(1, min(int(body.num_inference_steps), 30))
         try:
             return await Model(model_name=body.model).generate.remote.aio(
                 prompt=body.prompt,
