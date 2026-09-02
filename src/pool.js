@@ -70,13 +70,11 @@ async function runCLI(args, env, options = {}) {
   }
 
   if (cmd === 'upload') {
-    const filePath = args[0];
-    return await modalUpload('/upload', filePath);
+    return await modalUpload('/upload', args[1]);
   }
 
   if (cmd === 'analyze') {
-    const filePath = args[0];
-    return await modalUpload('/analyze', filePath);
+    return await modalUpload('/analyze', args[1]);
   }
 
   if (cmd === 'task' && sub === 'create') {
@@ -91,15 +89,8 @@ async function runCLI(args, env, options = {}) {
     const ratio = ratioIdx >= 0 ? args[ratioIdx + 1] : '1:1';
     const resolution = resIdx >= 0 ? args[resIdx + 1] : '1k';
 
-    let refImageB64 = null;
-    if (materialsIdx >= 0) {
-      const materialId = args[materialsIdx + 1].split(',')[0].split(':')[0];
-      const refData = await modalFetch(`/task/${materialId}`);
-      try {
-        const parsed = JSON.parse(refData);
-        refImageB64 = parsed.image_b64 || null;
-      } catch (_) {}
-    }
+    // generation.js passes the base64 payload returned by /upload directly.
+    const refImageB64 = materialsIdx >= 0 ? args[materialsIdx + 1] : null;
 
     const body = { model, prompt, ratio, resolution };
     if (refImageB64) body.ref_image_b64 = refImageB64;
