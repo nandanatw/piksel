@@ -83,7 +83,7 @@ def get_dimensions(ratio: str, resolution: str) -> tuple[int, int]:
     image=image,
     # SDXL + CPU offload fits in 24GB cards. L4 is the cheapest option.
     gpu=os.environ.get("PIKSEL_GPU", "L4,A10").split(","),
-    timeout=15 * MINUTES,
+    timeout=30 * MINUTES,
     volumes={CACHE_DIR: cache_volume},
     secrets=[secret],
     scaledown_window=300,
@@ -161,7 +161,7 @@ class Model:
         }
 
 
-@app.function(image=image, secrets=[secret], timeout=15 * MINUTES)
+@app.function(image=image, secrets=[secret], timeout=30 * MINUTES)
 @modal.concurrent(max_inputs=100)
 @modal.asgi_app()
 def fastapi_app():
