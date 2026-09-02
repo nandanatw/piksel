@@ -387,8 +387,7 @@ export default function AdminQueue() {
                   
                   <Select value={modelFilter} onChange={e => setModelFilter(e.target.value)}>
                     <option value="all">All Models</option>
-                    <option value="flux-dev">Flux.1 Dev</option>
-                    <option value="flux-schnell">Flux.1 Schnell</option>
+                    <option value="pony-v6">Pony Diffusion V6</option>
                   </Select>
                   
                   <Input

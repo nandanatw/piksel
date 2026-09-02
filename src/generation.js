@@ -232,7 +232,7 @@ async function cancelProviderTask(localTaskId) {
 
 async function generateImageRotate(prompt, model, ratio, resolution, refFiles, localTaskId = null) {
   const pool = await refreshCredits();
-  const modelInfo = IMAGE_MODELS[model] || IMAGE_MODELS['flux-schnell'];
+  const modelInfo = IMAGE_MODELS[model] || IMAGE_MODELS['pony-v6'];
   const useRatio = ratio || modelInfo.defaultRatio;
   const useRes = resolution || modelInfo.defaultRes;
   const estimatedCost = getModelCost(model);

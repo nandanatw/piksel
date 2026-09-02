@@ -41,7 +41,7 @@ export default function Generate() {
   const { toast } = useToast()
   const { theme, toggle: toggleTheme } = useTheme()
   const [models, setModels] = useState<Record<string, Model>>({})
-  const [model, setModel] = useState('flux-schnell')
+  const [model, setModel] = useState('pony-v6')
   const [ratio, setRatio] = useState('1:1')
   const [ratioMenuOpen, setRatioMenuOpen] = useState(false)
   const [resolution, setResolution] = useState('')
@@ -163,7 +163,7 @@ const [showSettings, setShowSettings] = useState(false)
       }
       const draft = sessionStorage.getItem('generationDraft')
       const parsed = draft ? JSON.parse(draft) : null
-      const nextModel = parsed?.model && data[parsed.model] ? parsed.model : data['flux-schnell'] ? 'flux-schnell' : Object.keys(data)[0]
+      const nextModel = parsed?.model && data[parsed.model] ? parsed.model : data['pony-v6'] ? 'pony-v6' : Object.keys(data)[0]
       if (nextModel) {
         setModel(nextModel)
         setRatio(parsed?.ratio && data[nextModel].ratios.includes(parsed.ratio) ? parsed.ratio : data[nextModel].defaultRatio)

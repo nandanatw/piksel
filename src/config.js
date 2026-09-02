@@ -84,16 +84,14 @@ const RANDOM_NAMES = [
 ];
 
 const IMAGE_MODELS = {
-  'flux-dev': { name: 'Flux.1 Dev', supportsImageInput: true, resolutions: ['1k','2k','3k','4k'], ratios: ['1:1','4:3','3:4','16:9','9:16','3:2','2:3','21:9'], defaultRatio: '1:1', defaultRes: '1k' },
-  'flux-schnell': { name: 'Flux.1 Schnell', supportsImageInput: true, resolutions: ['1k','2k','3k','4k'], ratios: ['1:1','4:3','3:4','16:9','9:16','3:2','2:3','21:9'], defaultRatio: '1:1', defaultRes: '1k' },
+  'pony-v6': { name: 'Pony Diffusion V6', supportsImageInput: true, resolutions: ['1k','2k','3k','4k'], ratios: ['1:1','4:3','3:4','16:9','9:16','3:2','2:3','21:9','4:5','5:4'], defaultRatio: '1:1', defaultRes: '1k' },
 };
 
 // Only these providers are currently safe for reference-image uploads.
-const REFERENCE_IMAGE_MODELS = new Set(['flux-dev', 'flux-schnell']);
+const REFERENCE_IMAGE_MODELS = new Set(['pony-v6']);
 
 const FALLBACK_COSTS = {
-  'flux-dev': 6,
-  'flux-schnell': 3,
+  'pony-v6': 6,
 };
 
 module.exports = { config, RANDOM_NAMES, IMAGE_MODELS, FALLBACK_COSTS, REFERENCE_IMAGE_MODELS };
