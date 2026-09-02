@@ -41,7 +41,7 @@ cache_volume = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 secret = modal.Secret.from_name("piksel-modal")
 
 MODEL_IDS = {
-    "pony-v6": "LyliaEngine/Pony_Diffusion_V6_XL",
+    "pony-v6": "Bakanayatsu/Pony-Diffusion-V6-XL-for-Anime",
 }
 
 MODEL_COSTS = {"pony-v6": 6}
@@ -88,9 +88,10 @@ def get_dimensions(ratio: str, resolution: str) -> tuple[int, int]:
     secrets=[secret],
     scaledown_window=300,
 )
+@modal.concurrent(max_inputs=1)
 class Model:
-    """SDXL/Flux dev/Flux schnell worker. CPU offload is not thread-safe, so we
-    accept inputs serially with @modal.concurrent(max_inputs=1)."""
+    """SDXL worker. CPU offload is not thread-safe, so we accept inputs
+    serially via @modal.concurrent(max_inputs=1)."""
 
     model_name: str = modal.parameter(default="pony-v6")
 
@@ -100,12 +101,12 @@ class Model:
         self.txt2img = diffusers.StableDiffusionXLPipeline.from_pretrained(
             model_id,
             torch_dtype=torch.bfloat16,
-            variant="fp16",
         )
         self.txt2img.enable_model_cpu_offload()
         self.img2img = diffusers.StableDiffusionXLImg2ImgPipeline(
             **self.txt2img.components
         )
+        self.img2img.enable_model_cpu_offload()
 
     @modal.method()
     def generate(
