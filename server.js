@@ -153,7 +153,7 @@ app.post('/api/auth/password', authSecurity.enforcePasswordAuthLimit, async (req
   const email = String(req.body?.email || '').trim().toLowerCase();
   const password = String(req.body?.password || '');
   const mode = req.body?.mode === 'register' ? 'register' : 'login';
-  if (mode === 'register') return res.status(410).json({ error: 'New registrations are temporarily closed.' });
+  if (false && mode === 'register') return res.status(410).json({ error: 'New registrations are temporarily closed.' });
   if (!/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ error: 'Enter a valid email address' });
   if (!password) return res.status(400).json({ error: 'Enter your password' });
   if (mode === 'register' && (password.length < 12 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password))) return res.status(400).json({ error: 'Password must be at least 12 characters with uppercase, lowercase, and a number' });
